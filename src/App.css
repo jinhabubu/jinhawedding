@@ -136,7 +136,7 @@ body {
 }
 
 .comment {
-  padding: 15px;
+  padding: 20px;
   margin-bottom: 15px;
   background-color: #f8f9fa;
   border-radius: 8px;
@@ -146,44 +146,42 @@ body {
 .comment-relation {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
-  color: #666;
-  font-size: 0.9em;
+  margin-left: 12px;
+  font-size: 0.5em;
+  margin-left: 10px;
 }
 
 .relation-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  margin-right: 8px;
-}
-
-.comment.모두에게 .relation-dot {
-  background-color: #9c27b0;
-}
-
-.comment.신랑에게 .relation-dot {
-  background-color: #2196f3;
-}
-
-.comment.신부에게 .relation-dot {
-  background-color: #e91e63;
+  margin-left: 8px;
 }
 
 .comment-content {
   margin-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .comment-content strong {
-  display: block;
-  margin-bottom: 5px;
-  color: #333;
+  font-size: 1em;
+  color: #555;
 }
 
 .comment-content p {
   margin: 0;
-  color: #555;
-  line-height: 1.5;
+  color: #333;
+  line-height: 1.6;
+  font-size: 0.8em;
 }
 
 .comment-form {
@@ -255,35 +253,30 @@ body {
   background-color: #e91e63;
 }
 
-.author-input {
-  width: 100%;
+.author-input,
+.content-textarea,
+.submit-button {
+  width: 94%;
   padding: 12px;
-  margin-bottom: 15px;
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 16px;
+}
+
+.author-input {
+  margin-bottom: 15px;
 }
 
 .content-textarea {
-  width: 100%;
   height: 100px;
-  padding: 12px;
-  margin-bottom: 15px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
   resize: vertical;
-  font-size: 16px;
-  font-family: inherit;
+  margin-bottom: 15px;
 }
 
 .submit-button {
-  width: 100%;
-  padding: 12px;
   background-color: #4CAF50;
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 16px;
   cursor: pointer;
   transition: background-color 0.2s;
 }
@@ -337,4 +330,79 @@ body {
   will-change: transform, opacity;
   transform: translateZ(0);
   backface-visibility: hidden;
+}
+
+.comment-time {
+  font-size: 0.6em;
+  color: #999;
+  margin-top: 8px;
+  display: block;
+}
+
+/* 관계별 색상 */
+.comment.모두에게 {
+  border-left: 3px solid #9c27b0;
+}
+
+.comment.신랑에게 {
+  border-left: 3px solid #2196f3;
+}
+
+.comment.신부에게 {
+  border-left: 3px solid #e91e63;
+}
+
+.comment.모두에게 .relation-dot {
+  background-color: #9c27b0;
+}
+
+.comment.신랑에게 .relation-dot {
+  background-color: #2196f3;
+}
+
+.comment.신부에게 .relation-dot {
+  background-color: #e91e63;
+}
+
+.delete-button {
+  background: none;
+  border: none;
+  color: #e91e63;
+  cursor: pointer;
+  font-size: 1.2em;
+  margin-top: 5px;
+}
+
+.delete-button:hover {
+  color: #c62828;
+}
+
+.comment-time-relation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.comment-relation {
+  margin-left: 12px;
+  font-size: 0.5em;
+}
+
+.comment-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.comment.모두에게 .comment-relation {
+  color: #9c27b0;
+}
+
+.comment.신랑에게 .comment-relation {
+  color: #2196f3;
+}
+
+.comment.신부에게 .comment-relation {
+  color: #e91e63;
 }

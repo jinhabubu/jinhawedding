@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import ReactDOMServer from 'react-dom/server';
-import { db } from './firebase';
+import { db, database } from './firebase';
 import { collection, addDoc, query, onSnapshot, orderBy } from 'firebase/firestore';
+import { ref, set, onValue, push, get } from 'firebase/database';
 import './App.css';
 
 Modal.setAppElement('#root');
@@ -28,18 +29,32 @@ const photos = Array.from({ length: 10 }, (_, index) => ({
   color: `hsl(${(index * 36) % 360}, 70%, 70%)`,
 }));
 
+// 날짜 포맷팅 함수 추가
+const formatDate = (timestamp) => {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  
+  return `${year}.${month}.${day} ${hours}:${minutes}`;
+};
+
 function App() {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [currentPhoto, setCurrentPhoto] = useState(null);
-  const [comments, setComments] = useState([
-    { id: 1, relation: '신랑에게', author: '홍길동', content: '축하합니다!' },
-    { id: 2, relation: '신부에게', author: '김영희', content: '행복하세요!' },
-    { id: 3, relation: '모두에게', author: '이순신', content: '결혼 축하드립니다!' },
-  ]);
+  const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState({
     relation: '모두에게',
     author: '',
-    content: ''
+    content: '',
+    phone: '',
+    password: ''
+  });
+  const [deleteInfo, setDeleteInfo] = useState({
+    phone: '',
+    password: ''
   });
 
   const openModal = (photo) => {
@@ -54,25 +69,66 @@ function App() {
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
-    if (!newComment.author.trim() || !newComment.content.trim()) {
-      alert('이름과 내용을 모두 입력해주세요.');
+
+    // 핸드폰 번호와 비밀번호 유효성 검사
+    const phoneRegex = /^\d{11}$/; // 11자리 숫자 정규 표현식
+    const passwordRegex = /^\d{4}$/; // 4자리 숫자 정규 표현식
+
+    if (!newComment.author.trim() || !newComment.content.trim() || !newComment.phone.trim() || !newComment.password.trim()) {
+      alert('모든 필드를 입력해주세요.');
       return;
     }
-    
+
+    if (!phoneRegex.test(newComment.phone)) {
+      alert('핸드폰 번호는 11자리 숫자여야 합니다.');
+      return;
+    }
+
+    if (!passwordRegex.test(newComment.password)) {
+      alert('비밀번호는 4자리 숫자여야 합니다.');
+      return;
+    }
+
     try {
-      await addDoc(collection(db, "comments"), {
+      const commentsRef = ref(database, 'comments');
+      const snapshot = await get(commentsRef);
+      const commentCount = snapshot.exists() ? Object.keys(snapshot.val()).length : 0;
+      const newCommentId = `comment_${commentCount + 1}`;
+      
+      const newCommentRef = ref(database, `comments/${newCommentId}`);
+      await set(newCommentRef, {
         ...newComment,
-        timestamp: new Date(),
+        timestamp: Date.now(),
+        displayTime: formatDate(Date.now())
       });
       
-      setNewComment(prev => ({
-        ...prev,
+      setNewComment({
+        relation: '모두에게',
         author: '',
-        content: ''
-      }));
+        content: '',
+        phone: '',
+        password: ''
+      });
     } catch (error) {
       console.error("Error adding comment: ", error);
       alert('댓글 등록에 실패했습니다.');
+    }
+  };
+
+  const handleDeleteComment = async (id) => {
+    const commentsRef = ref(database, `comments/${id}`);
+    const snapshot = await get(commentsRef);
+    const commentData = snapshot.val();
+
+    if (commentData) {
+      if (deleteInfo.phone === commentData.phone || deleteInfo.password === commentData.password) {
+        await set(commentsRef, null);
+        alert('댓글이 삭제되었습니다.');
+      } else {
+        alert('휴대폰 번호 또는 비밀번호가 일치하지 않습니다.');
+      }
+    } else {
+      alert('댓글을 찾을 수 없습니다.');
     }
   };
 
@@ -158,13 +214,21 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const q = query(collection(db, "comments"), orderBy("timestamp", "desc"));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const commentsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setComments(commentsData);
+    const commentsRef = ref(database, 'comments');
+    
+    const unsubscribe = onValue(commentsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const commentsArray = Object.entries(data).map(([id, comment]) => ({
+          id: parseInt(id.split('_')[1]), // comment_1 -> 1
+          ...comment,
+          displayTime: comment.displayTime || formatDate(comment.timestamp) // 이전 데이터 호환성
+        }))
+        .sort((a, b) => b.timestamp - a.timestamp);
+        setComments(commentsArray);
+      } else {
+        setComments([]);
+      }
     });
 
     return () => unsubscribe();
@@ -206,13 +270,24 @@ function App() {
         <div className="comment-list">
           {comments.map((comment) => (
             <div key={comment.id} className={`comment ${comment.relation}`}>
-              <div className="comment-relation">
-                <span className="relation-dot"></span>
-                {comment.relation}
-              </div>
               <div className="comment-content">
-                <strong>{comment.author}</strong>
+                <div className="comment-header">
+                  <strong>{comment.author}</strong>
+                  <div className="comment-relation">
+                    <span className={`relation-dot ${comment.relation}`}></span>
+                    &nbsp;{comment.relation}
+                  </div>
+                </div>
                 <p>{comment.content}</p>
+                <div className="comment-footer">
+                  <span className="comment-time">{comment.displayTime}</span>
+                  <button onClick={() => handleDeleteComment(comment.id)} className="delete-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-trash" viewBox="0 0 16 16">
+                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                      <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -273,6 +348,7 @@ function App() {
             }))}
             className="author-input"
           />
+
           <textarea
             placeholder="축하 메시지를 남겨주세요"
             value={newComment.content}
@@ -282,6 +358,28 @@ function App() {
             }))}
             className="content-textarea"
           />
+          <span>수정과 삭제를위해 정확히 남겨주세요</span>
+          <input
+            type="text"
+            placeholder="휴대폰 번호"
+            value={newComment.phone}
+            onChange={(e) => setNewComment(prev => ({
+              ...prev,
+              phone: e.target.value
+            }))}
+            className="author-input"
+          />
+          <input
+            type="password"
+            placeholder="게시물 비밀번호"
+            value={newComment.password}
+            onChange={(e) => setNewComment(prev => ({
+              ...prev,
+              password: e.target.value
+            }))}
+            className="author-input"
+          />
+
           <button type="submit" className="submit-button">메시지 남기기</button>
         </form>
       </section>
