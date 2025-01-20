@@ -81,7 +81,7 @@ const CloseButton = ({ onClick }) => (
     fill="currentColor"
     className="bi bi-x-lg"
     viewBox="0 0 16 16"
-    style={{ cursor: 'pointer', fill: '#333', position: 'absolute', top: '10px', right: '20px', zIndex: 10 }}
+    style={{ cursor: 'pointer', fill: '#333', position: 'absolute', top: '10px', right: '32px', zIndex: 10 }}
   >
     <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z" />
   </svg>
@@ -151,6 +151,21 @@ function App() {
     id: ''
   });
   const [isDeleteMode, setIsDeleteMode] = useState(false);
+  
+  const [editInfo, setEditInfo] = useState({
+    phone: '',
+    password: '',
+    id: ''
+  });
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editContents, setEditContents] = useState({
+    author: '',
+    content: '',
+  });
+
+
+
+  const [fadeInElements, setFadeInElements] = useState([]);
 
   const openModal = (photo, index) => {
     setCurrentPhoto(photo);
@@ -223,6 +238,32 @@ function App() {
     }
   };
 
+  const handleEditComment = async (e) => {
+    e.preventDefault();
+
+    const commentsRef = ref(database, `comments/comment_${editInfo.id}`);
+    const snapshot = await get(commentsRef);
+    const commentData = snapshot.val();
+
+    if (commentData) {
+      // 핸드폰 번호와 비밀번호를 확인
+      if (editInfo.phone === commentData.phone && editInfo.password === commentData.password) {
+        await set(commentsRef, {
+          ...commentData,
+          author: editContents.author,
+          content: editContents.content
+        });
+        alert('내용이 수정되었습니다.');
+        setIsEditMode(false); // 수정 모드 종료
+        setEditInfo({ phone: '', password: '', id: '' }); // 입력 필드 초기화
+      } else {
+        alert('휴대폰 번호 또는 비밀번호가 일치하지 않습니다.');
+      }
+    } else {
+      alert('댓글을 찾을 수 없습니다.');
+    }
+  };
+
   const handleDeleteComment = async (e) => {
     e.preventDefault();
 
@@ -244,6 +285,31 @@ function App() {
       alert('댓글을 찾을 수 없습니다.');
     }
   };
+
+
+
+  // 스크롤 이벤트 핸들러
+  const handleScroll = () => {
+    const elements = document.querySelectorAll('.fade-in-up'); // 페이드 인 클래스를 가진 요소 선택
+    elements.forEach((element) => {
+      const rect = element.getBoundingClientRect();
+      if (rect.top < window.innerHeight && rect.bottom > 0) {
+        // 요소가 화면에 보일 때
+        element.classList.remove('fade-out'); // 사라지는 클래스 제거
+        element.classList.add('fade-in-up'); // 요소가 화면에 보일 때 클래스 추가
+      } else {
+        // 요소가 화면에서 사라질 때
+        element.classList.add('fade-out'); // 사라지는 애니메이션 클래스 추가
+      }
+    });
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll); // 스크롤 이벤트 리스너 추가
+    return () => {
+      window.removeEventListener('scroll', handleScroll); // 컴포넌트 언마운트 시 리스너 제거
+    };
+  }, []);
 
   useEffect(() => {
     // 꽃잎을 담을 별도의 컨테이너 생성
@@ -354,14 +420,28 @@ function App() {
           <img src={require('./images/main_01.JPG')} alt="Main" />
           <h1 className="overlay-text">HAPPY WEDDING</h1>
         </div>
-        <h1 className="wedding-info">김진영 · 정하진</h1>
-        <p className="wedding-date">2025 . 05 . 31</p>
-        <p className="wedding-location">광명무역센터컨벤션</p>
-        <p className="wedding-address">경기도 광명시 일직로 72 광명무역센터 3층</p>
+        <br />
+        <br />
+        <p className="wedding-bible fade-in-up">수고하고 무거운 짐 진 자들아 다 <br /> 내게로오라 내가 너희를 쉬게하리라 말씀 <br /> 마태복음 11:28 </p>
+        <br /><br /><br />
+        <p className="wedding-invite-title fade-in-up"> 소중한 분들을 초대합니다. </p>
+        <br />
+        <p className="wedding-invite-info fade-in-up"> 지금까지 신랑 신부가 잘 장성할 수 있도록 <br /> 함께해주시고 지켜봐주신 모든 지인분들께 <br />감사드립니다. <br /><br /> 이제 결실을 맺으며 하나님앞에 언약하는 <br />귀중한자리 초대하오니 찾아오셔서 축하와 <br />따듯한 말씀 나눠주시면 감사히 듣고 기억하여 <br /> 좋은 가정이 만들어가겠습니다. <br /><br />사정이 있어 참석하지 못하셔도<br />너무 마음쓰지 않으셨으면 좋겠습니다. <br /> 마음으로 축복하고 좋은 가정 <br />될 수 있도록 기도해주시면 충분합니다. </p>
+        <br /><br /><br />
+        <p className="wedding-info1 fade-in-up">김경오·김종임 의 <p style={{width: '60px', display: 'inline-block', margin: '0px', fontSize: '0.8em'}}>아들</p> 진영</p>
+        <p className="wedding-info2 fade-in-up">정진수·김미란 의 <p style={{width: '60px', display: 'inline-block', margin: '0px', fontSize: '0.8em'}}>딸</p>  하진</p>
+        <br /><br /><br />
+        <p className="wedding-location-title fade-in-up"> 예식안내 </p>
+        <br />
+        <p className="wedding-dday fade-in-up"></p>
+        <p className="wedding-date fade-in-up">2025 . 05 . 31 (토) 13:20 pm</p>
+        <p className="wedding-location fade-in-up">광명무역센터컨벤션</p>
+        <p className="wedding-address fade-in-up">경기도 광명시 일직로 72 광명무역센터 3층</p>
+        <br /><br />
       </header>
 
       <section className="photos">
-        <h2>Photos</h2>
+        <h2>Photos <span style={{fontSize: '0.8em',fontWeight: '200', color: '#555'}}>({Object.keys(galleryImages).length})</span></h2>
         <div className="photo-grid">
           {Object.keys(galleryImages).map((key, index) => (
             <div
@@ -396,20 +476,30 @@ function App() {
         <h2>축하 메시지</h2>
         <div className="comment-list">
           {comments.map((comment) => (
+            
             <div key={comment.id} className={`comment ${comment.relation}`}>
               <div className="comment-content">
                 <div className="comment-header">
-                  <strong>{comment.author}</strong>
+                  {isEditMode && editInfo.id === comment.id ? ( 
+                    <form><input name='author' value={editContents.author} onChange={(e) => setEditContents(prev => ({...prev, author: e.target.value }))}/></form> ) : ( <strong>{comment.author}</strong> 
+                  )}
                   <div className="comment-relation">
                     <span className={`relation-dot ${comment.relation}`}></span>
                     {comment.relation}
                   </div>
                 </div>
-                <p>{comment.content}</p>
+                {isEditMode && editInfo.id === comment.id ? ( 
+                    <form><textarea name='content' value={editContents.content} onChange={(e) => setEditContents(prev => ({...prev, content: e.target.value }))}/></form> ) : ( <p>{comment.content}</p> 
+                )}
+                
                 <div className="comment-footer">
                   <span className="comment-time">{comment.displayTime}</span>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '100%' }}>
-                    <button className="edit-button" style={{ background: 'none', border: 'none', color: '#2196f3', marginRight: '10px' }}>
+                    <button onClick={() => {
+                      setIsEditMode(true);
+                      setEditInfo({ ...editInfo, id: comment.id }); // 수정할 댓글 ID 저장
+                      setEditContents({author: comment.author, content: comment.content});
+                    }} className="edit-button" style={{ background: 'none', border: 'none', color: '#2196f3', marginRight: '10px' }}>
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="bi bi-pencil-square" viewBox="0 0 16 16">
                         <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
                         <path fillRule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
@@ -427,6 +517,30 @@ function App() {
                   </div>
                 </div>
               </div>
+              {isEditMode && editInfo.id === comment.id && ( // 삭제 모드일 때만 입력 필드와 버튼 표시
+                <div className="edit-form">
+                  <form onSubmit={handleEditComment}>
+                    <input
+                      type="text"
+                      placeholder="휴대폰 번호"
+                      value={editInfo.phone}
+                      onChange={(e) => setEditInfo({ ...editInfo, phone: e.target.value })}
+                      className="author-input"
+                    />
+                    <input
+                      type="password"
+                      placeholder="게시물 비밀번호"
+                      value={editInfo.password}
+                      onChange={(e) => setEditInfo({ ...editInfo, password: e.target.value })}
+                      className="author-input"
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <button type="submit" className="edit-button" style={{ backgroundColor: 'blue', color: 'white', padding: '10px 20px', fontSize: '1em' }}>수정</button>
+                      <button type="button" onClick={() => setIsEditMode(false)} className="cancel-button" style={{ marginLeft: '10px', backgroundColor: 'gray', color: 'white', padding: '10px 20px', fontSize: '1em' }}>취소</button>
+                    </div>
+                  </form>
+                </div>
+              )}
               {isDeleteMode && deleteInfo.id === comment.id && ( // 삭제 모드일 때만 입력 필드와 버튼 표시
                 <div className="delete-form">
                   <form onSubmit={handleDeleteComment}>
