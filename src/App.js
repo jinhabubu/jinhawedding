@@ -133,6 +133,133 @@ const NextButton = ({ onClick }) => (
   </svg>
 );
 
+const calculateDaysUntilWedding = (weddingDate) => {
+  const today = new Date();
+  const wedding = new Date(weddingDate);
+  const timeDiff = wedding - today; // 밀리초 단위 차이
+  const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)); // 일 단위로 변환
+
+  if (daysDiff > 0) {
+    return `D-${daysDiff} 남았습니다.`; // 결혼식까지 남은 일수
+  } else if (daysDiff === 0) {
+    return '당일입니다.'; // 결혼식 당일
+  } else {
+    return `지났습니다.`; // 결혼식이 지난 경우
+  }
+};
+
+const Calendar = ({ year, month }) => {
+  const daysInMonth = new Date(year, month, 0).getDate(); // 해당 월의 일 수
+  const firstDay = new Date(year, month - 1, 1).getDay(); // 해당 월의 첫 번째 날의 요일
+  const weeks = [];
+
+  // 빈 배열로 시작
+  let week = Array(7).fill(null);
+
+  // 첫 번째 주의 빈 칸 채우기
+  for (let i = 0; i < firstDay; i++) {
+    week[i] = null;
+  }
+
+  // 날짜 채우기
+  for (let day = 1; day <= daysInMonth; day++) {
+    week[(firstDay + day - 1) % 7] = day; // 요일에 맞춰 날짜 배치
+    if ((firstDay + day) % 7 === 0 || day === daysInMonth) {
+      weeks.push(week); // 주가 끝나면 주 배열을 추가
+      week = Array(7).fill(null); // 다음 주를 위한 빈 배열
+    }
+  }
+
+  return (
+    <div className="calendar fade-in-up">
+      <div className="calendar-header">
+        <div>{year}년 {month}월</div>
+      </div>
+      <div className="calendar-body">
+        {weeks.map((week, index) => (
+          <div className="calendar-week" key={index}>
+            {week.map((day, dayIndex) => (
+              <div key={dayIndex} className={`calendar-day ${day === 31 ? 'highlight' : ''}`}>
+                {day}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const Map = () => {
+  useEffect(() => {
+    if (!window.kakao) {
+      console.error("Kakao Maps API is not loaded.");
+      return;
+    }
+
+    const container = document.getElementById('map'); // 지도를 표시할 div
+    const options = {
+      center: new window.kakao.maps.LatLng(37.42003166325095, 126.88917717756195), // 초기 위도, 경도
+      level: 3, // 지도의 확대 레벨
+    };
+
+    const map = new window.kakao.maps.Map(container, options); // 지도 생성
+
+    // 커스텀 마커를 위한 HTML 요소 생성
+    const customMarker = document.createElement('div');
+    customMarker.style.position = 'relative';
+    customMarker.style.width = '80px'; // Increase width
+    customMarker.style.height = '100px'; // Increase height
+    customMarker.style.bottom = '-20px';
+
+    // SVG Location Icon
+    const svgIcon = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="80" height="100" viewBox="0 0 24 24" fill="#000" stroke="none">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 3.87 7 11 7 11s7-7.13 7-11c0-3.87-3.13-7-7-7z"/>
+        <path d="M12 12c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+        <polygon points="12,100 6,80 18,80" fill="#ff4081"/> <!-- Pointed bottom -->
+      </svg>
+    `;
+    customMarker.innerHTML = svgIcon;
+
+    // Circular Image
+    const imageContainer = document.createElement('div');
+    imageContainer.style.position = 'absolute';
+    imageContainer.style.top = '40%'; // Adjust to position the image correctly
+    imageContainer.style.left = '50%';
+    imageContainer.style.transform = 'translate(-50%, -50%)'; // 중앙 정렬
+    imageContainer.style.width = '36px'; // Increase image size
+    imageContainer.style.height = '36px'; // Increase image size
+    imageContainer.style.borderRadius = '50%'; // 동그라미 모양
+    imageContainer.style.border = '2px solid #ffffff'; // 테두리 추가
+    imageContainer.style.overflow = 'hidden'; // 이미지가 동그라미를 넘지 않도록
+
+    const markerImage = document.createElement('img');
+    markerImage.src = require('./images/marker.png'); // 마커 이미지 경로
+    markerImage.style.width = '100%'; // 이미지 크기
+    markerImage.style.height = '100%'; // 이미지 크기
+    markerImage.style.objectFit = 'cover'; // 이미지 비율 유지
+
+    imageContainer.appendChild(markerImage); // 이미지 추가
+    customMarker.appendChild(imageContainer); // 커스텀 마커에 이미지 추가
+
+    // 마커 위치 설정
+    const markerPosition = new window.kakao.maps.LatLng(37.42003166325095, 126.88917717756195); // 마커 위치
+
+    // 커스텀 마커를 지도에 추가
+    const customOverlay = new window.kakao.maps.CustomOverlay({
+      position: markerPosition,
+      content: customMarker,
+      yAnchor: 1, // 마커의 수직 앵커 설정
+    });
+    customOverlay.setMap(map); // 커스텀 오버레이를 지도에 표시
+  }, []);
+
+  return (
+    <div id="map" style={{ width: '100%', height: '300px', margin: '20px 0' }}></div>
+  );
+};
+
 function App() {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [currentPhoto, setCurrentPhoto] = useState(null);
@@ -163,9 +290,10 @@ function App() {
     content: '',
   });
 
-
-
   const [fadeInElements, setFadeInElements] = useState([]);
+
+  const weddingDate = '2025-05-31'; // 결혼 날짜 설정
+  const weddingStatus = calculateDaysUntilWedding(weddingDate);
 
   const openModal = (photo, index) => {
     setCurrentPhoto(photo);
@@ -285,8 +413,6 @@ function App() {
       alert('댓글을 찾을 수 없습니다.');
     }
   };
-
-
 
   // 스크롤 이벤트 핸들러
   const handleScroll = () => {
@@ -433,10 +559,16 @@ function App() {
         <br /><br /><br />
         <p className="wedding-location-title fade-in-up"> 예식안내 </p>
         <br />
-        <p className="wedding-dday fade-in-up"></p>
+        
+        <Calendar year={2025} month={5} />
+        <p className="wedding-dday fade-in-up">{weddingStatus}</p>
         <p className="wedding-date fade-in-up">2025 . 05 . 31 (토) 13:20 pm</p>
         <p className="wedding-location fade-in-up">광명무역센터컨벤션</p>
         <p className="wedding-address fade-in-up">경기도 광명시 일직로 72 광명무역센터 3층</p>
+
+        <Map />
+        <button className='naver-map' onClick={() => window.open('https://map.naver.com/v5/search/광명무역센터컨벤션', '_blank')}>네이버지도</button>
+        <button className='kakao-map' onClick={() => window.open('https://map.kakao.com/?urlX=475477&urlY=1089087&urlLevel=3&itemId=491238215&q=%EA%B4%91%EB%AA%85%EB%AC%B4%EC%97%AD%EC%84%BC%ED%84%B0%EC%BB%A8%EB%B2%A4%EC%85%98&srcid=491238215&map_type=TYPE_MAP', '_blank')}>카카오지도</button>
         <br /><br />
       </header>
 
@@ -665,6 +797,7 @@ function App() {
         <p>신랑 계좌: 123-456-7890</p>
         <p>신부 계좌: 098-765-4321</p>
       </section>
+
     </div>
   );
 }

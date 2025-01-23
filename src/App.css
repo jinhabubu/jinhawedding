@@ -49,6 +49,26 @@ body {
   object-fit: cover; /* Maintain aspect ratio */
 }
 
+.naver-map {
+  background-color: #00c73c;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 10px;
+} 
+
+.kakao-map {
+  background-color: #ffd700;
+  color: #000000;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
 .photos {
   margin: 20px 0;
   background-color: #fff;
@@ -594,4 +614,68 @@ body {
   margin: 0px;
   font-size: 0.8em; /* 글자 크기 작게 설정 */
   color: #b78e5c; /* 텍스트 색상 빨간색으로 설정 */
+}
+
+.calendar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.calendar-header {
+  font-size: 1.2em;
+  font-family: 'Gowun Batang', serif; /* 폰트 설정 */
+  font-weight: 400; /* 폰트 두께 설정 */
+  font-style: normal; /* 폰트 스타일 설정 */
+  background: linear-gradient(45deg, #ffa8ab, #ff97b9); /* 그라데이션 배경색 */
+  color: #ffffff;
+  width: 302px;
+  padding: 4px 0px;
+}
+
+.calendar-body {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  border: 1px solid #fab8e1;
+}
+
+.calendar-week {
+  display: flex;
+  justify-content: center;
+}
+
+.calendar-day {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  margin: 2px;
+  background-color: #ffffff; /* 연한 회색 배경 */
+  color: #333; /* 글자 색상 */
+  font-size: 1em;
+  font-weight: bold;
+  transition: background-color 0.3s;
+  position: relative; /* 자식 요소를 절대 위치로 설정하기 위해 */
+}
+
+.calendar-day.highlight {
+  border-radius: 50%;
+  background-color: #ffcccb; /* 강조된 날짜의 배경색 */
+  color: #fff; /* 강조된 날짜의 글자 색상 */
+}
+
+.day-title {
+  position: absolute; /* 동그라미 안에 타이틀을 위치시키기 위해 */
+  bottom: -20px; /* 동그라미 아래에 위치 */
+  left: 50%; /* 수평 중앙 정렬 */
+  transform: translateX(-50%); /* 중앙 정렬 */
+  background-color: #2196f3; /* 타이틀 배경색 */
+  color: white; /* 타이틀 글자색 */
+  padding: 2px 5px; /* 패딩 추가 */
+  border-radius: 5px; /* 모서리 둥글게 */
+  font-size: 0.8em; /* 글자 크기 조정 */
+  text-align: center; /* 텍스트 중앙 정렬 */
 }
