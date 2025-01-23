@@ -8,22 +8,6 @@ import './App.css';
 
 Modal.setAppElement('#root');
 
-// 꽃잎 SVG 컴포넌트
-const FlowerPetal = ({ style }) => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 20 20"
-    style={style}
-  >
-    <path
-      d="M10 0 C13 3 15 7 15 10 C15 13 13 17 10 20 C7 17 5 13 5 10 C5 7 7 3 10 0"
-      fill="rgba(255, 223, 236, 0.7)"
-      transform="rotate(45, 10, 10)"
-    />
-  </svg>
-);
-
 const photos = Array.from({ length: 10 }, (_, index) => ({
   id: index + 1,
   color: `hsl(${(index * 36) % 360}, 70%, 70%)`,
@@ -216,7 +200,7 @@ const Map = () => {
     const svgIcon = `
       <svg xmlns="http://www.w3.org/2000/svg" width="80" height="100" viewBox="0 0 24 30" fill="#000" stroke="none">
           <path d="M12 5C8.13 5 5 8.13 5 12c0 3.87 7 11 7 11s7-7.13 7-11c0-3.87-3.13-7-7-7z"/>
-          <path d="M12 15c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+          <path d="M12 15c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2 2z"/>
         <!-- 다이아몬드(gem) 아이콘 추가 -->
         <g transform="translate(8,0) scale(0.5)">
           <path d="M3.1 0.2C3.14657 0.137902 3.20697 0.0875003 3.27639 0.0527864C3.34582 0.0180726 3.42238 0 3.5 0H12.5C12.5776 0 12.6542 0.0180726 12.7236 0.0527864C12.793 0.0875003 12.8534 0.137902 12.9 0.2L15.876 4.174C16.025 4.359 16.032 4.624 15.886 4.818L8.4 14.8C8.35343 14.8621 8.29303 14.9125 8.22361 14.9472C8.15418 14.9819 8.07762 15 8 15C7.92238 15 7.84582 14.9819 7.77639 14.9472C7.70697 14.9125 7.64657 14.8621 7.6 14.8L0.1 4.8C0.0350889 4.71345 0 4.60819 0 4.5C0 4.39181 0.0350889 4.28655 0.1 4.2L3.1 0.2Z" fill="black"/>
@@ -273,6 +257,21 @@ const Map = () => {
   );
 };
 
+// 꽃잎 SVG 컴포넌트
+const FlowerPetal = ({ style }) => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 20 20"
+    style={style}
+  >
+    <path
+      d="M10 0 C13 3 15 7 15 10 C15 13 13 17 10 20 C7 17 5 13 5 10 C5 7 7 3 10 0"
+      fill="rgba(255, 223, 236, 0.7)"
+    />
+  </svg>
+);
+
 function App() {
   const [showInitialScreen, setShowInitialScreen] = useState(true);
   const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -313,6 +312,15 @@ function App() {
   const [isMuted, setIsMuted] = useState(false); 
   const [turnOnMusic, setTurnOnMusic] = useState(false);
   const audioRef = useRef(null); // 오디오 요소를 위한 ref
+
+  const [isGroomOpen, setIsGroomOpen] = useState(false);
+  const [isBrideOpen, setIsBrideOpen] = useState(false);
+
+  const [showSpinner, setShowSpinner] = useState(true); // 스피너 표시 상태를 관리하는 state 추가
+
+  const [lastPattern, setLastPattern] = useState(0); // 마지막 패턴 저장을 위한 변수 추가
+
+  const [isClickable, setIsClickable] = useState(false);
 
   const openModal = (photo, index) => {
     setCurrentPhoto(photo);
@@ -457,87 +465,6 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // 꽃잎을 담을 별도의 컨테이너 생성
-    const petalContainer = document.createElement('div');
-    petalContainer.className = 'petal-container';
-    document.body.appendChild(petalContainer);
-
-    // 꽃잎 풀 생성
-    const petalPool = Array.from({ length: 20 }, () => {
-      const petal = document.createElement('div');
-      petal.className = 'flower-petal';
-      petal.style.position = 'fixed'; // absolute 대신 fixed 사용
-      petal.style.zIndex = '1'; // 모달(z-index: 9999)보다 낮은 값으로 설정
-      petal.style.display = 'none';
-      
-      // SVG 꽃잎 렌더링
-      const svgString = ReactDOMServer.renderToString(
-        <FlowerPetal style={{ 
-          width: '100%', 
-          height: '100%',
-        }} />
-      );
-      petal.innerHTML = svgString;
-      petalContainer.appendChild(petal); // App 대신 petalContainer에 추가
-      return petal;
-    });
-
-    let availablePetals = [...petalPool];
-
-    const createPetal = () => {
-      if (availablePetals.length === 0) return;
-
-      const petal = availablePetals.pop();
-      const size = Math.random() * 15 + 10;
-      
-      petal.style.display = 'block';
-      petal.style.left = `${Math.random() * 100}vw`;
-      petal.style.top = '-30px';
-      petal.style.width = `${size}px`;
-      petal.style.height = `${size}px`;
-
-      // photos 섹션까지의 거리 계산
-      const photos = document.querySelector('.photos');
-      const photosDistance = photos ? photos.offsetTop : window.innerHeight;
-      const duration = 8;
-
-      // 애니메이션 최적화 - 더 자연스러운 회전 추가
-      const startRotation = Math.random() * 360;
-      const rotationAmount = Math.random() * 720 - 360; // -360도에서 360도 사이의 회전
-
-      const animation = petal.animate([
-        { 
-          transform: `translate3d(0, 0, 0) rotate(${startRotation}deg)`,
-          opacity: 1 
-        },
-        { 
-          transform: `translate3d(${Math.random() * 200 - 100}px, ${photosDistance}px, 0) rotate(${startRotation + rotationAmount}deg)`,
-          opacity: 0
-        }
-      ], {
-        duration: duration * 1000,
-        easing: 'cubic-bezier(0.37, 0, 0.63, 1)', // 더 자연스러운 이징
-        fill: 'forwards'
-      });
-
-      // 애니메이션 완료 후 꽃잎 재사용
-      animation.onfinish = () => {
-        petal.style.display = 'none';
-        availablePetals.push(petal);
-      };
-    };
-
-    // 꽃잎 생성 간격 조정
-    const interval = setInterval(createPetal, 500);
-
-    // 클린업
-    return () => {
-      clearInterval(interval);
-      petalContainer.remove();
-    };
-  }, []);
-
-  useEffect(() => {
     const commentsRef = ref(database, 'comments');
     
     const unsubscribe = onValue(commentsRef, (snapshot) => {
@@ -570,80 +497,141 @@ function App() {
     setIsPlaying(!isPlaying); // 상태 토글
   };
 
+  useEffect(() => {
+    // 10초 후에 스피너를 숨김
+    const timer = setTimeout(() => {
+      setShowSpinner(false);
+    }, 5000);
 
+    // 컴포넌트가 언마운트될 때 타이머 정리
+    return () => clearTimeout(timer);
+  }, []);
 
+  useEffect(() => {
+    const createPetal = () => {
+      const petal = document.createElement('div');
+      petal.className = 'flower-petal';
+      
+      // SVG 꽃잎 추가
+      const svgString = ReactDOMServer.renderToString(
+        <FlowerPetal style={{ width: '100%', height: '100%' }} />
+      );
+      petal.innerHTML = svgString;
+      
+      // 랜덤 시작 위치와 크기
+      const startX = Math.random() * window.innerWidth;
+      const size = 15 + Math.random() * 10;
+      const duration = 9 + Math.random() * 4; // 9-13초로 수정
+      const delay = Math.random() * 2; // 딜레이는 유지
+      
+      // 랜덤 움직임 패턴 선택
+      const pattern = Math.random() < 0.5 
+        ? 3  // 50% 확률로 직선 낙하
+        : (lastPattern === 0 ? 1 : 0);  // 이전과 다른 패턴 선택
+      
+      // 마지막 패턴 저장을 위한 변수 추가 (컴포넌트 최상단에 추가)
+      setLastPattern(pattern);
+      
+      // style을 cssText로 직접 설정
+      petal.style.cssText = `
+        left: ${startX}px;
+        top: -${size}px;
+        width: ${size}px;
+        height: ${size}px;
+        animation: flutter${pattern} ${duration}s linear ${delay}s;
+        animation-delay: ${delay}s;
+        z-index: 1000;
+        transform: rotate(${Math.random() * 360}deg) scale(${pattern === 3 ? 0.8 : 1});
+      `;
+      
+      document.body.appendChild(petal);
+      
+      // 애니메이션 종료 후 제거
+      setTimeout(() => {
+        petal.remove();
+      }, (duration + delay) * 1000);
+    };
 
-  // useEffect(() => {
-  //   if (turnOnMusic) {
-  //     togglePlayPause();
-  //   }
-  // }, [turnOnMusic]); 
+    // 주기적으로 꽃잎 생성
+    const interval = setInterval(createPetal, 600); // 300ms -> 600ms로 변경
+    return () => clearInterval(interval);
+  }, [lastPattern]);
 
-  
-  return (
+  useEffect(() => {
+    // 초기에 스크롤 막기
+    document.body.style.overflow = 'hidden';
     
+    setTimeout(() => {
+      setIsClickable(true);
+    }, 5000);
+  }, []);
+
+  return (
     <div className="App">
-
-    {showInitialScreen && (
-      <div 
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100vh',
-          backgroundColor: 'white',
-          zIndex: 9999,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          flexDirection: 'column',
-          backgroundColor: 'rgb(0, 0, 0, 0.8)',
-          
-        }}
-        onClick={() => {
-          setShowInitialScreen(false);
-          togglePlayPause();
-        }}
-      >
-
-        <div style={{
-          textAlign: 'center',
-          fontFamily: 'Sue Ellen Francisco, cursive',
-          color: 'white',
-          padding: '20px'
-        }}>
-          <svg width="100%" height="300" viewBox="0 0 600 300">
-            <defs>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-            <text className="svg-text" x="50%" y="20" textAnchor="middle" fill="white" fontSize="100">
-              WELCOME
-            </text>
-            <text className="svg-text" x="50%" y="140" textAnchor="middle" fill="white" fontSize="100">
-              TO OUR
-            </text>
-            <text className="svg-text" x="50%" y="260" textAnchor="middle" fill="white" fontSize="100">
-              WEDDING
-            </text>
-          </svg>
-            <div class="text-center">
-              <div class="spinner-border" role="status" style={{color: 'white', marginBottom: '40px'}}>
-                <span class="visually-hidden">Loading...</span>
+      {showInitialScreen && (
+        <div 
+          onClick={() => {
+            if (!isClickable) return;
+            setShowInitialScreen(false);
+            togglePlayPause();
+            // 클릭 후 스크롤 허용
+            document.body.style.overflow = 'auto';
+          }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100vh',
+            backgroundColor: 'white',
+            zIndex: 9999,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexDirection: 'column',
+            backgroundColor: 'rgb(0, 0, 0, 0.8)',
+            cursor: isClickable ? 'pointer' : 'default'
+          }}
+        >
+          <div style={{
+            textAlign: 'center',
+            fontFamily: 'Sue Ellen Francisco, cursive',
+            color: 'white',
+            padding: '20px'
+          }}>
+            <svg width="100%" height="300" viewBox="0 0 600 300" style={{overflow: 'visible'}}>
+              <defs>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+              <text className="svg-text" x="50%" y="20" textAnchor="middle" fill="white" fontSize="100">
+                WELCOME
+              </text>
+              <text className="svg-text" x="50%" y="140" textAnchor="middle" fill="white" fontSize="100">
+                TO OUR
+              </text>
+              <text className="svg-text" x="50%" y="260" textAnchor="middle" fill="white" fontSize="100">
+                WEDDING
+              </text>
+            </svg>
+            {showSpinner && ( // showSpinner 상태에 따라 조건부 렌더링
+              <div className="text-center">
+                <div className="spinner-border" role="status" style={{color: 'white', marginBottom: '40px'}}>
+                  <span className="visually-hidden">Loading...</span>
+                </div>
               </div>
-            </div>
-          <h2 className="intro-text-touch">화면을 터치해주세요</h2>
-          <br />
-          <p className="intro-text-music">음악을 음소거하시려면 <br />우측 상단 스피커 아이콘을<br /> 클릭해주세요</p>
+            )}
+            <h2 className="intro-text-touch">화면을 터치해주세요</h2>
+            <br />
+            <p className="intro-text-music">음악을 음소거하시려면 <br />우측 상단 스피커 아이콘을<br /> 클릭해주세요</p>
+          </div>
         </div>
-      </div>
-    )}
+      )}
       
       <header className="header">
         <audio ref={audioRef} src={require('./bgm/track01.mp3')} loop />
@@ -663,7 +651,7 @@ function App() {
         </div>
         <div className="header-image" style={{ position: 'relative' }}>
           <img src={require('./images/main_01.JPG')} alt="Main" />
-          <h1 className="overlay-text">HAPPY WEDDING</h1>
+          <h1 className="overlay-text">진영♡하진</h1>
         </div>
         <br />
         <br />
@@ -673,7 +661,7 @@ function App() {
         <br />
         <p className="wedding-invite-info fade-in-up"> 지금까지 신랑 신부가 잘 장성할 수 있도록 <br /> 함께해주시고 지켜봐주신 모든 지인분들께 <br />감사드립니다. <br /><br /> 이제 결실을 맺으며 하나님앞에 언약하는 <br />귀중한자리 초대하오니 찾아오셔서 축하와 <br />따듯한 말씀 나눠주시면 감사히 듣고 기억하여 <br /> 좋은 가정이 만들어가겠습니다. <br /><br />사정이 있어 참석하지 못하셔도<br />너무 마음쓰지 않으셨으면 좋겠습니다. <br /> 마음으로 축복하고 좋은 가정 <br />될 수 있도록 기도해주시면 충분합니다. </p>
         <br /><br /><br />
-        <p className="wedding-info1 fade-in-up">김경오·김종임 의 <p style={{width: '60px', display: 'inline-block', margin: '0px', fontSize: '0.8em'}}>아들</p> 진영</p>
+        <p className="wedding-info1 fade-in-up">김경오·김종임 의 <p style={{width: '60px', display: 'inline-block', margin: '0px', fontSize: '0.8em'}}>아들</p>  진영</p>
         <p className="wedding-info2 fade-in-up">정진수·김미란 의 <p style={{width: '60px', display: 'inline-block', margin: '0px', fontSize: '0.8em'}}>딸</p>  하진</p>
         <br /><br /><br />
         <p className="wedding-location-title fade-in-up"> 예식안내 </p>
@@ -688,7 +676,7 @@ function App() {
         <p className="wedding-address fade-in-up" style={{textAlign:'left', paddingLeft:'10%'}}>연회장안내: 광명무역센터 C동 2층</p>
         <p className="wedding-address fade-in-up" style={{textAlign:'left', paddingLeft:'10%'}}>주차안내: 2시간 무료 (초과시 시간당 2000원) </p>
         <p className="wedding-address fade-in-up" style={{textAlign:'left', paddingLeft:'10%'}}>(B2/B3 주차 700석 데스크에서 노트북에 차량번호 입력) </p>
-
+        <br /><br />
 
         <Map />
         <button className='naver-map' onClick={() => window.open('https://map.naver.com/v5/search/광명무역센터컨벤션', '_blank')}>네이버지도</button>
@@ -697,7 +685,7 @@ function App() {
       </header>
 
       <section className="photos">
-        <h2>Photos <span style={{fontSize: '0.8em',fontWeight: '200', color: '#555'}}>({Object.keys(galleryImages).length})</span></h2>
+        <h2 className="photos-title">갤러리 <span style={{fontSize: '0.6em',fontWeight: '200', color: '#555'}}>({Object.keys(galleryImages).length})</span></h2>
         <div className="photo-grid">
           {Object.keys(galleryImages).map((key, index) => (
             <div
@@ -729,7 +717,7 @@ function App() {
       </Modal>
 
       <section className="comments">
-        <h2>축하 메시지</h2>
+        <h2 className="comments-title">축하 메시지</h2>
         <div className="comment-list">
           {comments.map((comment) => (
             
@@ -737,15 +725,15 @@ function App() {
               <div className="comment-content">
                 <div className="comment-header">
                   {isEditMode && editInfo.id === comment.id ? ( 
-                    <form><input name='author' value={editContents.author} onChange={(e) => setEditContents(prev => ({...prev, author: e.target.value }))}/></form> ) : ( <strong>{comment.author}</strong> 
+                    <form><input name='author' style={{width: '300px'}} value={editContents.author} onChange={(e) => setEditContents(prev => ({...prev, author: e.target.value }))}/></form> ) : ( <strong>{comment.author}</strong> 
                   )}
                   <div className="comment-relation">
                     <span className={`relation-dot ${comment.relation}`}></span>
-                    {comment.relation}
+                    {/* {comment.relation} */}
                   </div>
                 </div>
                 {isEditMode && editInfo.id === comment.id ? ( 
-                    <form><textarea name='content' value={editContents.content} onChange={(e) => setEditContents(prev => ({...prev, content: e.target.value }))}/></form> ) : ( <p>{comment.content}</p> 
+                    <form><textarea name='content' style={{width: '300px', height: '100px'}} value={editContents.content} onChange={(e) => setEditContents(prev => ({...prev, content: e.target.value }))}/></form> ) : ( <p>{comment.content}</p> 
                 )}
                 
                 <div className="comment-footer">
@@ -753,9 +741,10 @@ function App() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '100%' }}>
                     <button onClick={() => {
                       setIsEditMode(true);
+                      setIsDeleteMode(false);
                       setEditInfo({ ...editInfo, id: comment.id }); // 수정할 댓글 ID 저장
                       setEditContents({author: comment.author, content: comment.content});
-                    }} className="edit-button" style={{ background: 'none', border: 'none', color: '#2196f3', marginRight: '10px' }}>
+                    }} className="edit-button" style={{ background: 'none', border: 'none', color: '#999', marginRight: '10px' }}>
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="bi bi-pencil-square" viewBox="0 0 16 16">
                         <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
                         <path fillRule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
@@ -763,8 +752,9 @@ function App() {
                     </button>
                     <button onClick={() => {
                       setIsDeleteMode(true);
+                      setIsEditMode(false);
                       setDeleteInfo({ ...deleteInfo, id: comment.id }); // 삭제할 댓글 ID 저장
-                    }} className="delete-button" style={{ background: 'none', border: 'none' }}>
+                    }} className="delete-button" style={{ background: 'none', border: 'none', color: '#999' }}>
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="bi bi-trash" viewBox="0 0 16 16">
                         <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
                         <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
@@ -790,7 +780,7 @@ function App() {
                       onChange={(e) => setEditInfo({ ...editInfo, password: e.target.value })}
                       className="author-input"
                     />
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
                       <button type="submit" className="edit-button" style={{ backgroundColor: 'blue', color: 'white', padding: '10px 20px', fontSize: '1em' }}>수정</button>
                       <button type="button" onClick={() => setIsEditMode(false)} className="cancel-button" style={{ marginLeft: '10px', backgroundColor: 'gray', color: 'white', padding: '10px 20px', fontSize: '1em' }}>취소</button>
                     </div>
@@ -814,7 +804,7 @@ function App() {
                       onChange={(e) => setDeleteInfo({ ...deleteInfo, password: e.target.value })}
                       className="author-input"
                     />
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
                       <button type="submit" className="delete-button" style={{ backgroundColor: 'red', color: 'white', padding: '10px 20px', fontSize: '1em' }}>삭제</button>
                       <button type="button" onClick={() => setIsDeleteMode(false)} className="cancel-button" style={{ marginLeft: '10px', backgroundColor: 'gray', color: 'white', padding: '10px 20px', fontSize: '1em' }}>취소</button>
                     </div>
@@ -890,7 +880,7 @@ function App() {
             }))}
             className="content-textarea"
           />
-          <span>수정과 삭제를위해 정확히 남겨주세요</span>
+          <div style={{fontSize: '0.7em', color: '#999'}}>수정과 삭제를위해 정확히 남겨주세요(분실시:신랑에게 문의)</div>
           <input
             type="text"
             placeholder="휴대폰 번호 11자리"
@@ -917,9 +907,75 @@ function App() {
       </section>
 
       <section className="donation">
-        <h2>축의금 안내</h2>
-        <p>신랑 계좌: 123-456-7890</p>
-        <p>신부 계좌: 098-765-4321</p>
+        <h2 className="donation-title">축의금 안내</h2>
+        
+        {/* 신랑 측 계좌번호 */}
+        <div className="account-section">
+          <button 
+            className="account-button"
+            onClick={() => setIsGroomOpen(!isGroomOpen)}
+            style={{
+              width: '80%',
+              padding: '15px',
+              margin: '10px 0',
+              backgroundColor: '#f4edef',
+              border: '1px solid #ddd',
+              borderRadius: '5px',
+              cursor: 'pointer',
+            }}
+          >
+            신랑 측 계좌번호 보기
+          </button>
+          
+          <div 
+            style={{
+              maxHeight: isGroomOpen ? '500px' : '0',
+              overflow: 'hidden',
+              transition: 'max-height 0.3s ease-in-out',
+              backgroundColor: '#f9f9f9',
+              padding: isGroomOpen ? '15px' : '0',
+              borderRadius: '5px'
+            }}
+          >
+            <p className="account-info">신랑: 123-456-7890 (농협 홍길동)</p>
+            <p className="account-info">신랑 부: 123-456-7890 (국민 홍판서)</p>
+            <p className="account-info">신랑 모: 123-456-7890 (신한 홍여사)</p>
+          </div>
+        </div>
+
+        {/* 신부 측 계좌번호 */}
+        <div className="account-section">
+          <button 
+            className="account-button"
+            onClick={() => setIsBrideOpen(!isBrideOpen)}
+            style={{
+              width: '80%',
+              padding: '15px',
+              margin: '10px 0',
+              backgroundColor: '#f4edef',
+              border: '1px solid #ddd',
+              borderRadius: '5px',
+              cursor: 'pointer',
+            }}
+          >
+            신부 측 계좌번호 보기
+          </button>
+          
+          <div 
+            style={{
+              maxHeight: isBrideOpen ? '500px' : '0',
+              overflow: 'hidden',
+              transition: 'max-height 0.3s ease-in-out',
+              backgroundColor: '#f9f9f9',
+              padding: isBrideOpen ? '15px' : '0',
+              borderRadius: '5px'
+            }}
+          >
+            <p className="account-info">신부: 098-765-4321 (우리 김길동)</p>
+            <p className="account-info">신부 부: 098-765-4321 (하나 김판서)</p>
+            <p className="account-info">신부 모: 098-765-4321 (기업 김여사)</p>
+          </div>
+        </div>
       </section>
 
     </div>
