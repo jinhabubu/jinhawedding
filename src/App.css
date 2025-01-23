@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Knewave&family=PT+Sans+Narrow:wght@400;700&family=Petit+Formal+Script&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Sue+Ellen+Francisco&display=swap');
 body {
   background-color: #f9f9f9;
   overflow-x: hidden;
@@ -19,6 +19,23 @@ body {
   transform: translateZ(0);
   backface-visibility: hidden;
   min-height: 100vh;
+}
+
+.intro-text-touch {
+  font-family: 'Gowun Batang', serif; /* 폰트 설정 */
+  font-weight: 400; /* 폰트 두께 설정 */
+  font-style: normal; /* 폰트 스타일 설정 */
+  font-size: 2em;
+  color: #ddd;
+  margin-bottom: 10px;
+}
+
+.intro-text-music {
+  font-family: 'Gowun Batang', serif; /* 폰트 설정 */
+  font-weight: 400; /* 폰트 두께 설정 */
+  font-style: normal; /* 폰트 스타일 설정 */
+  font-size: 1em;
+  color: #ddd;
 }
 
 .header {
@@ -678,4 +695,128 @@ body {
   border-radius: 5px; /* 모서리 둥글게 */
   font-size: 0.8em; /* 글자 크기 조정 */
   text-align: center; /* 텍스트 중앙 정렬 */
+}
+
+button {
+  background-color: #ff4081; /* Button color */
+  color: white; /* Text color */
+  border: none; /* No border */
+  padding: 10px 20px; /* Padding */
+  border-radius: 5px; /* Rounded corners */
+  cursor: pointer; /* Pointer cursor */
+  font-size: 16px; /* Font size */
+  transition: background-color 0.3s; /* Transition effect */
+}
+
+button:hover {
+  background-color: #e63946; /* Darker shade on hover */
+}
+
+.typing-effect {
+  border-right: 2px solid black; /* 커서 효과 */
+  animation: blink 0.7s step-end infinite; /* 깜빡임 효과 */
+}
+
+@keyframes blink {
+  50% {
+    border-color: transparent; /* 커서 깜빡임 */
+  }
+}
+
+.wipe-effect {
+  display: inline-block;
+  overflow: hidden; /* 텍스트가 넘치지 않도록 숨김 */
+  white-space: nowrap; /* 텍스트가 줄 바꿈되지 않도록 설정 */
+  animation: wipe 3s forwards; /* 애니메이션 적용 */
+}
+
+@keyframes wipe {
+  0% {
+    width: 0; /* 시작할 때 너비 0 */
+  }
+  100% {
+    width: 100%; /* 끝날 때 너비 100% */
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0; /* 시작할 때 투명 */
+  }
+  to {
+    opacity: 1; /* 끝날 때 불투명 */
+  }
+}
+
+@keyframes drawText {
+  0% {
+    stroke-dashoffset: 100%;
+    fill-opacity: 0;
+    transform: translateY(20px);
+  }
+  50% {
+    fill-opacity: 0;
+    stroke-width: 2px;
+  }
+  80% {
+    fill-opacity: 0;
+    stroke-width: 1px;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    fill-opacity: 1;
+    transform: translateY(0);
+    stroke-width: 0;
+  }
+}
+
+@keyframes glowEffect {
+  0% {
+    filter: brightness(1) blur(0);
+  }
+  50% {
+    filter: brightness(1.2) blur(2px);
+  }
+  100% {
+    filter: brightness(1) blur(0);
+  }
+}
+
+.svg-text {
+  font-family: 'Sue Ellen Francisco', cursive;
+  stroke: white;
+  stroke-width: 1px;
+  stroke-dasharray: 100%;
+  stroke-dashoffset: 100%;
+  fill: white;
+  filter: url(#glow);
+  animation: 
+    drawText 2s cubic-bezier(0.7, 0, 0.3, 1) forwards,
+    glowEffect 3s ease-in-out infinite;
+}
+
+.svg-text:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.svg-text:nth-child(3) {
+  animation-delay: 1s;
+}
+
+.svg-text:nth-child(4) {
+  animation-delay: 1.5s;
+}
+
+/* 부드러운 움직임을 위한 전역 설정 */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* SVG 텍스트에 호버 효과 추가 */
+.svg-text:hover {
+  animation: none;
+  transform: scale(1.05);
+  transition: transform 0.3s ease;
+  filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
 }

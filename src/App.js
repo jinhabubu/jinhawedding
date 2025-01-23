@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Modal from 'react-modal';
 import ReactDOMServer from 'react-dom/server';
 import { db, database } from './firebase';
@@ -214,13 +214,26 @@ const Map = () => {
 
     // SVG Location Icon
     const svgIcon = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="80" height="100" viewBox="0 0 24 24" fill="#000" stroke="none">
-        <path d="M12 2C8.13 2 5 5.13 5 9c0 3.87 7 11 7 11s7-7.13 7-11c0-3.87-3.13-7-7-7z"/>
-        <path d="M12 12c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
-        <polygon points="12,100 6,80 18,80" fill="#ff4081"/> <!-- Pointed bottom -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="80" height="100" viewBox="0 0 24 30" fill="#000" stroke="none">
+          <path d="M12 5C8.13 5 5 8.13 5 12c0 3.87 7 11 7 11s7-7.13 7-11c0-3.87-3.13-7-7-7z"/>
+          <path d="M12 15c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+        <!-- 다이아몬드(gem) 아이콘 추가 -->
+        <g transform="translate(8,0) scale(0.5)">
+          <path d="M3.1 0.2C3.14657 0.137902 3.20697 0.0875003 3.27639 0.0527864C3.34582 0.0180726 3.42238 0 3.5 0H12.5C12.5776 0 12.6542 0.0180726 12.7236 0.0527864C12.793 0.0875003 12.8534 0.137902 12.9 0.2L15.876 4.174C16.025 4.359 16.032 4.624 15.886 4.818L8.4 14.8C8.35343 14.8621 8.29303 14.9125 8.22361 14.9472C8.15418 14.9819 8.07762 15 8 15C7.92238 15 7.84582 14.9819 7.77639 14.9472C7.70697 14.9125 7.64657 14.8621 7.6 14.8L0.1 4.8C0.0350889 4.71345 0 4.60819 0 4.5C0 4.39181 0.0350889 4.28655 0.1 4.2L3.1 0.2Z" fill="black"/>
+          <path d="M14.486 3.985L12.68 1.575L11.904 3.988L14.486 3.985Z" fill="#51ABFF"/>
+          <path d="M10.853 3.989L11.814 1H4.186L5.149 3.995L10.853 3.989Z" fill="#51ABFF"/>
+          <path d="M5.47 4.995L8 12.866L10.532 4.99L5.47 4.995Z" fill="#51ABFF"/>
+          <path d="M4.099 3.996L3.319 1.574L1.501 3.999L4.099 3.996Z" fill="#51ABFF"/>
+          <path d="M1.499 5L6.612 11.817L4.42 4.997L1.499 5Z" fill="#51ABFF"/>
+          <path d="M9.388 11.817L14.511 4.987L11.583 4.989L9.388 11.817Z" fill="#51ABFF"/>
+        </g>
       </svg>
+
     `;
+
+    
     customMarker.innerHTML = svgIcon;
+
 
     // Circular Image
     const imageContainer = document.createElement('div');
@@ -261,6 +274,7 @@ const Map = () => {
 };
 
 function App() {
+  const [showInitialScreen, setShowInitialScreen] = useState(true);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [currentPhoto, setCurrentPhoto] = useState(null);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
@@ -294,6 +308,11 @@ function App() {
 
   const weddingDate = '2025-05-31'; // 결혼 날짜 설정
   const weddingStatus = calculateDaysUntilWedding(weddingDate);
+
+  const [isPlaying, setIsPlaying] = useState(false); // 오디오가 재생되지 않도록 초기화
+  const [isMuted, setIsMuted] = useState(false); 
+  const [turnOnMusic, setTurnOnMusic] = useState(false);
+  const audioRef = useRef(null); // 오디오 요소를 위한 ref
 
   const openModal = (photo, index) => {
     setCurrentPhoto(photo);
@@ -539,9 +558,109 @@ function App() {
     return () => unsubscribe();
   }, []);
 
+  // 오디오 재생/일시정지 토글 함수
+  const togglePlayPause = () => {
+    if (isPlaying) {
+      audioRef.current.pause(); // 오디오 일시정지
+      setIsMuted(true);
+    } else {
+      audioRef.current.play(); // 오디오 재생
+      setIsMuted(false);
+    }
+    setIsPlaying(!isPlaying); // 상태 토글
+  };
+
+
+
+
+  // useEffect(() => {
+  //   if (turnOnMusic) {
+  //     togglePlayPause();
+  //   }
+  // }, [turnOnMusic]); 
+
+  
   return (
+    
     <div className="App">
+
+    {showInitialScreen && (
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100vh',
+          backgroundColor: 'white',
+          zIndex: 9999,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          flexDirection: 'column',
+          backgroundColor: 'rgb(0, 0, 0, 0.8)',
+          
+        }}
+        onClick={() => {
+          setShowInitialScreen(false);
+          togglePlayPause();
+        }}
+      >
+
+        <div style={{
+          textAlign: 'center',
+          fontFamily: 'Sue Ellen Francisco, cursive',
+          color: 'white',
+          padding: '20px'
+        }}>
+          <svg width="100%" height="300" viewBox="0 0 600 300">
+            <defs>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            <text className="svg-text" x="50%" y="20" textAnchor="middle" fill="white" fontSize="100">
+              WELCOME
+            </text>
+            <text className="svg-text" x="50%" y="140" textAnchor="middle" fill="white" fontSize="100">
+              TO OUR
+            </text>
+            <text className="svg-text" x="50%" y="260" textAnchor="middle" fill="white" fontSize="100">
+              WEDDING
+            </text>
+          </svg>
+            <div class="text-center">
+              <div class="spinner-border" role="status" style={{color: 'white', marginBottom: '40px'}}>
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          <h2 className="intro-text-touch">화면을 터치해주세요</h2>
+          <br />
+          <p className="intro-text-music">음악을 음소거하시려면 <br />우측 상단 스피커 아이콘을<br /> 클릭해주세요</p>
+        </div>
+      </div>
+    )}
+      
       <header className="header">
+        <audio ref={audioRef} src={require('./bgm/track01.mp3')} loop />
+        <div className="volume-switch" style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10 }}>
+          {isMuted ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" className="bi bi-volume-mute" viewBox="0 0 16 16" onClick={togglePlayPause} style={{ cursor: 'pointer', color: 'white' }}>
+              <path d="M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06M6 5.04 4.312 6.39A.5.5 0 0 1 4 6.5H2v3h2a.5.5 0 0 1 .312.11L6 10.96zm7.854.606a.5.5 0 0 1 0 .708L12.207 8l1.647 1.646a.5.5 0 0 1-.708.708L11.5 8.707l-1.646 1.647a.5.5 0 0 1-.708-.708L10.793 8 9.146 6.354a.5.5 0 1 1 .708-.708L11.5 7.293l1.646-1.647a.5.5 0 0 1 .708 0" />
+              
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" className="bi bi-volume-up" viewBox="0 0 16 16" onClick={togglePlayPause} style={{ cursor: 'pointer', color: 'white' }}>
+              <path d="M11.536 14.01A8.47 8.47 0 0 0 14.026 8a8.47 8.47 0 0 0-2.49-6.01l-.708.707A7.48 7.48 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303z"/>
+              <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.48 5.48 0 0 1 11.025 8a5.48 5.48 0 0 1-1.61 3.89z"/>
+              <path d="M10.025 8a4.5 4.5 0 0 1-1.318 3.182L8 10.475A3.5 3.5 0 0 0 9.025 8c0-.966-.392-1.841-1.025-2.475l.707-.707A4.5 4.5 0 0 1 10.025 8M7 4a.5.5 0 0 0-.812-.39L3.825 5.5H1.5A.5.5 0 0 0 1 6v4a.5.5 0 0 0 .5.5h2.325l2.363 1.89A.5.5 0 0 0 7 12zM4.312 6.39 6 5.04v5.92L4.312 9.61A.5.5 0 0 0 4 9.5H2v-3h2a.5.5 0 0 0 .312-.11"/>
+            </svg>
+          )}
+        </div>
         <div className="header-image" style={{ position: 'relative' }}>
           <img src={require('./images/main_01.JPG')} alt="Main" />
           <h1 className="overlay-text">HAPPY WEDDING</h1>
@@ -564,7 +683,12 @@ function App() {
         <p className="wedding-dday fade-in-up">{weddingStatus}</p>
         <p className="wedding-date fade-in-up">2025 . 05 . 31 (토) 13:20 pm</p>
         <p className="wedding-location fade-in-up">광명무역센터컨벤션</p>
-        <p className="wedding-address fade-in-up">경기도 광명시 일직로 72 광명무역센터 3층</p>
+        <p className="wedding-address fade-in-up">경기도 광명시 일직로 72 광명무역센터 C동 3층 그랜드볼룸</p>
+        <br />
+        <p className="wedding-address fade-in-up" style={{textAlign:'left', paddingLeft:'10%'}}>연회장안내: 광명무역센터 C동 2층</p>
+        <p className="wedding-address fade-in-up" style={{textAlign:'left', paddingLeft:'10%'}}>주차안내: 2시간 무료 (초과시 시간당 2000원) </p>
+        <p className="wedding-address fade-in-up" style={{textAlign:'left', paddingLeft:'10%'}}>(B2/B3 주차 700석 데스크에서 노트북에 차량번호 입력) </p>
+
 
         <Map />
         <button className='naver-map' onClick={() => window.open('https://map.naver.com/v5/search/광명무역센터컨벤션', '_blank')}>네이버지도</button>
