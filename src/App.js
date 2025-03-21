@@ -644,7 +644,7 @@ function App() {
     messageFilter === '모두' ? true : comment.relation === messageFilter
   );
 
-  // 표시할 메시지 수 계산 (필터링 된 메시지에서)
+  // 표시할 메시지 수 계산
   const displayedMessages = showAllMessages ? filteredMessages : filteredMessages.slice(0, 5);
 
   return (
@@ -927,29 +927,29 @@ function App() {
               )}
             </div>
           ))}
+
+          {/* 더보기/접기 버튼 */}
+          {filteredMessages.length > 5 && (
+            <button
+              onClick={() => setShowAllMessages(!showAllMessages)}
+              className="show-more-button"
+              style={{
+                backgroundColor: 'transparent',
+                border: '1px solid #ddd',
+                color: '#666',
+                padding: '8px 16px',
+                margin: '20px auto',
+                display: 'block',
+                cursor: 'pointer',
+                borderRadius: '20px',
+                fontSize: '0.9em'
+              }}
+            >
+              {showAllMessages ? '접기' : `더보기 (${filteredMessages.length - 5}개)`}
+            </button>
+          )}
         </div>
         
-        {/* 더보기 버튼 (필터링된 메시지 개수 기준) */}
-        {filteredMessages.length > 5 && !showAllMessages && (
-          <button
-            onClick={() => setShowAllMessages(true)}
-            className="show-more-button"
-            style={{
-              backgroundColor: 'transparent',
-              border: '1px solid #ddd',
-              color: '#666',
-              padding: '8px 16px',
-              margin: '20px auto',
-              display: 'block',
-              cursor: 'pointer',
-              borderRadius: '20px',
-              fontSize: '0.9em'
-            }}
-          >
-            더보기 ({filteredMessages.length - 5}개)
-          </button>
-        )}
-
         <form className="comment-form" onSubmit={handleSubmitComment}>
           <div className="radio-group">
             <label className="radio-label">
