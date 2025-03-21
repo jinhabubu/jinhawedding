@@ -5,7 +5,6 @@ import { db, database } from './firebase';
 import { collection, addDoc, query, onSnapshot, orderBy } from 'firebase/firestore';
 import { ref, set, onValue, push, get } from 'firebase/database';
 import './App.css';
-import { useSwipeable } from 'react-swipeable';
 
 Modal.setAppElement('#root');
 
@@ -54,10 +53,6 @@ const customStyles = {
     border: 'none',
     borderRadius: '8px',
   },
-  overlay: {
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    zIndex: 2000
-  }
 };
 
 // SVG X 버튼 컴포넌트
@@ -326,18 +321,6 @@ function App() {
   const [lastPattern, setLastPattern] = useState(0); // 마지막 패턴 저장을 위한 변수 추가
 
   const [isClickable, setIsClickable] = useState(false);
-
-  const [selectedPhoto, setSelectedPhoto] = useState(null);
-
-  const swipeRef = useRef(null);  // ref 추가
-
-  const handlers = useSwipeable({
-    onSwipedLeft: () => modalIsOpen && handleNext(),
-    onSwipedRight: () => modalIsOpen && handlePrev(),
-    preventDefaultTouchmoveEvent: true,
-    trackMouse: true,
-    ref: swipeRef  // ref 연결
-  });
 
   const openModal = (photo, index) => {
     setCurrentPhoto(photo);
@@ -668,7 +651,7 @@ function App() {
         </div>
         <div className="header-image" style={{ position: 'relative' }}>
           <img src={require('./images/main_01.JPG')} alt="Main" />
-          <h1 className="overlay-text">save the date</h1>
+          <h1 className="overlay-text">진영♡하진</h1>
         </div>
         <br />
         <br />
