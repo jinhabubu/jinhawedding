@@ -356,10 +356,16 @@ function App() {
 
   const [messageFilter, setMessageFilter] = useState('모두');  // 필터 상태 추가
 
+  const [scrollY, setScrollY] = useState(0);
+
   const openModal = (photo, index) => {
+    // 모달 상태 업데이트
     setCurrentPhoto(photo);
     setCurrentPhotoIndex(index);
     setModalIsOpen(true);
+    
+    // 스크롤만 막기
+    document.body.style.overflow = 'hidden';
   };
 
   const handleNext = () => {
@@ -375,8 +381,9 @@ function App() {
   };
 
   const closeModal = () => {
+    // 스크롤 다시 허용
+    document.body.style.overflow = 'auto';
     setModalIsOpen(false);
-    setCurrentPhoto(null);
   };
 
   const handleSubmitComment = async (e) => {
@@ -777,8 +784,15 @@ function App() {
         onRequestClose={closeModal}
         style={customStyles}
       >
+
+        
         <CloseButton onClick={closeModal} />
-        <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div 
+                onMouseDown={handleDragStart}
+                onMouseUp={handleDragEnd}
+                onTouchStart={handleDragStart}
+                onTouchEnd={handleDragEnd}
+        style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <PrevButton onClick={handlePrev} />
           {currentPhoto && (
             <img 
