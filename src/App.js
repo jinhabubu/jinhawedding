@@ -358,6 +358,13 @@ function App() {
 
   const [scrollY, setScrollY] = useState(0);
 
+  const [isTwoFingers, setIsTwoFingers] = useState(false);
+  const [isZoomCooldown, setIsZoomCooldown] = useState(false);
+
+  const [initialTouchDistance, setInitialTouchDistance] = useState(null);
+  const imageRef = useRef(null);
+  const [isZoomed, setIsZoomed] = useState(false);
+
   const openModal = (photo, index) => {
     // 모달 상태 업데이트
     setCurrentPhoto(photo);
@@ -384,6 +391,7 @@ function App() {
     // 스크롤 다시 허용
     document.body.style.overflow = 'auto';
     setModalIsOpen(false);
+    setIsZoomed(false);
   };
 
   const handleSubmitComment = async (e) => {
@@ -607,33 +615,81 @@ function App() {
     }, 5000);
   }, []);
 
-  const handleDragStart = (e) => {
-    setDragStart(e.clientX || e.touches[0].clientX);
+  const isImageZoomed = () => {
+    if (!imageRef.current) return false;
+    const style = window.getComputedStyle(imageRef.current);
+    const transform = style.transform;
+    
+    // transform이 없거나 'none'이면 확대되지 않은 상태
+    if (!transform || transform === 'none') return false;
+    
+    // transform 문자열에서 scale 값 추출
+    const match = transform.match(/scale\(([^)]+)\)/);
+    if (!match) return false;
+    
+    const scale = parseFloat(match[1]);
+    return scale > 1;  // scale이 1보다 크면 확대된 상태
   };
 
-  const handleDragEnd = (e) => {
-    if (!dragStart) return;
-    
-    const dragEnd = e.clientX || e.changedTouches[0].clientX;
-    const diff = dragStart - dragEnd;
-    const totalPhotos = Object.keys(galleryImages).length;
-    const photoKeys = Object.keys(galleryImages);
+  const handleTouchMove = (e) => {
+    if (e.touches.length === 2 && initialTouchDistance) {
+      // 현재 두 손가락 사이의 거리 계산
+      const currentDistance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      
+      // 거리 비율로 확대/축소 상태 판단
+      const scale = currentDistance / initialTouchDistance;
+      const newZoomState = scale > 1;
+      
+      // 확대 상태가 변경될 때 (특히 false로 변경될 때) 쿨다운 설정
+      if (isZoomed && !newZoomState) {
+        setIsZoomCooldown(true);
+        setTimeout(() => {
+          setIsZoomCooldown(false);
+        }, 500);
+      }
+      
+      setIsZoomed(newZoomState);
+    }
+  };
 
-    if (Math.abs(diff) > 50) {  // 50px 이상 드래그했을 때만 동작
-      if (diff > 0) {  // 왼쪽으로 드래그
-        if (currentPhotoIndex === totalPhotos - 1) {
-          setCurrentPhotoIndex(0);
-          setCurrentPhoto(galleryImages[photoKeys[0]]);  // 첫 번째 사진으로
-        } else {
-          handleNext();
-        }
-      } else {  // 오른쪽으로 드래그
-        if (currentPhotoIndex === 0) {
-          setCurrentPhotoIndex(totalPhotos - 1);
-          setCurrentPhoto(galleryImages[photoKeys[totalPhotos - 1]]);  // 마지막 사진으로
-        } else {
-          handlePrev();
-        }
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 2) {
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      setInitialTouchDistance(distance);
+      setIsTwoFingers(true);
+      return;
+    }
+    
+    // 확대되지 않은 상태이고 쿨다운 중이 아닐 때만 슬라이드 허용
+    if (!isTwoFingers && !isZoomed && !isZoomCooldown) {
+      const clientX = e.touches[0].clientX;
+      setDragStart(clientX);
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (initialTouchDistance !== null) {
+      setInitialTouchDistance(null);
+      setIsTwoFingers(false);
+      return;
+    }
+
+    if (!dragStart || isTwoFingers || isZoomed || isZoomCooldown) return;
+    
+    const clientX = e.changedTouches[0].clientX;
+    const diff = dragStart - clientX;
+
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        handleNext();
+      } else {
+        handlePrev();
       }
     }
     setDragStart(null);
@@ -784,25 +840,37 @@ function App() {
         onRequestClose={closeModal}
         style={customStyles}
       >
-
-        
         <CloseButton onClick={closeModal} />
         <div 
-                onMouseDown={handleDragStart}
-                onMouseUp={handleDragEnd}
-                onTouchStart={handleDragStart}
-                onTouchEnd={handleDragEnd}
-        style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{ 
+            position: 'relative', 
+            height: '100%', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            touchAction: 'pinch-zoom'
+          }}
+        >
           <PrevButton onClick={handlePrev} />
           {currentPhoto && (
             <img 
+              ref={imageRef}
               src={currentPhoto} 
               alt="Current" 
-              style={{ width: '100%', height: 'auto', margin: '0', maxHeight: '80%', objectFit: 'contain' }}
-              onMouseDown={handleDragStart}
-              onMouseUp={handleDragEnd}
-              onTouchStart={handleDragStart}
-              onTouchEnd={handleDragEnd}
+              onTouchStart={(e) => {
+                if (e.touches.length === 2) setIsZoomed(true);
+              }}
+              style={{ 
+                width: '100%', 
+                height: 'auto', 
+                margin: '0', 
+                maxHeight: '80%', 
+                objectFit: 'contain',
+                touchAction: 'pinch-zoom'
+              }} 
             />
           )}
           <NextButton onClick={handleNext} />
