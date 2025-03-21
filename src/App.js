@@ -352,6 +352,10 @@ function App() {
 
   const [dragStart, setDragStart] = useState(null);
 
+  const [showAllMessages, setShowAllMessages] = useState(false);
+
+  const [messageFilter, setMessageFilter] = useState('모두');  // 필터 상태 추가
+
   const openModal = (photo, index) => {
     setCurrentPhoto(photo);
     setCurrentPhotoIndex(index);
@@ -628,6 +632,14 @@ function App() {
     setDragStart(null);
   };
 
+  // 필터링된 메시지 계산
+  const filteredMessages = comments.filter(comment => 
+    messageFilter === '모두' ? true : comment.relation === messageFilter
+  );
+
+  // 표시할 메시지 수 계산 (필터링 된 메시지에서)
+  const displayedMessages = showAllMessages ? filteredMessages : filteredMessages.slice(0, 5);
+
   return (
     <div className="App">
       {showInitialScreen && (
@@ -788,8 +800,26 @@ function App() {
 
       <section className="comments">
         <h2 className="comments-title">축하 메시지</h2>
+        
+        {/* 필터 체크박스 추가 */}
+        <div className="message-filters">
+          {['모두', '신랑에게', '신부에게'].map((filter) => (
+            <label key={filter} className="filter-label">
+              <input
+                type="radio"
+                name="messageFilter"
+                value={filter}
+                checked={messageFilter === filter}
+                onChange={(e) => setMessageFilter(e.target.value)}
+                className="filter-radio"
+              />
+              {filter}
+            </label>
+          ))}
+        </div>
+
         <div className="comment-list">
-          {comments.map((comment) => (
+          {displayedMessages.map((comment) => (
             
             <div key={comment.id} className={`comment ${comment.relation}`}>
               <div className="comment-content">
@@ -884,6 +914,27 @@ function App() {
             </div>
           ))}
         </div>
+        
+        {/* 더보기 버튼 (필터링된 메시지 개수 기준) */}
+        {filteredMessages.length > 5 && !showAllMessages && (
+          <button
+            onClick={() => setShowAllMessages(true)}
+            className="show-more-button"
+            style={{
+              backgroundColor: 'transparent',
+              border: '1px solid #ddd',
+              color: '#666',
+              padding: '8px 16px',
+              margin: '20px auto',
+              display: 'block',
+              cursor: 'pointer',
+              borderRadius: '20px',
+              fontSize: '0.9em'
+            }}
+          >
+            더보기 ({filteredMessages.length - 5}개)
+          </button>
+        )}
 
         <form className="comment-form" onSubmit={handleSubmitComment}>
           <div className="radio-group">
@@ -932,46 +983,44 @@ function App() {
           </div>
           <input
             type="text"
-            placeholder="작성자"
             value={newComment.author}
-            onChange={(e) => setNewComment(prev => ({
-              ...prev,
-              author: e.target.value
-            }))}
+            onChange={(e) => setNewComment({ ...newComment, author: e.target.value })}
+            placeholder="이름"
+            required
             className="author-input"
           />
-
-          <textarea
-            placeholder="축하 메시지를 남겨주세요"
-            value={newComment.content}
-            onChange={(e) => setNewComment(prev => ({
-              ...prev,
-              content: e.target.value
-            }))}
-            className="content-textarea"
-          />
-          <div style={{fontSize: '0.7em', color: '#999'}}>수정과 삭제를위해 정확히 남겨주세요(분실시:신랑에게 문의)</div>
           <input
-            type="text"
-            placeholder="휴대폰 번호 11자리"
+            type="tel"
             value={newComment.phone}
-            onChange={(e) => setNewComment(prev => ({
-              ...prev,
-              phone: e.target.value
-            }))}
+            onChange={(e) => {
+              // 숫자만 입력 가능하고 11자리로 제한
+              const value = e.target.value.replace(/\D/g, '').slice(0, 11);
+              setNewComment({ ...newComment, phone: value });
+            }}
+            placeholder="전화번호"
+            required
             className="author-input"
           />
           <input
             type="password"
-            placeholder="게시물 비밀번호 4자리"
             value={newComment.password}
-            onChange={(e) => setNewComment(prev => ({
-              ...prev,
-              password: e.target.value
-            }))}
+            onChange={(e) => {
+              // 숫자만 입력 가능하고 4자리로 제한
+              const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+              setNewComment({ ...newComment, password: value });
+            }}
+            placeholder="비밀번호 (4자리)"
+            required
             className="author-input"
           />
-
+          <textarea
+            value={newComment.content}
+            onChange={(e) => setNewComment({ ...newComment, content: e.target.value })}
+            placeholder="축하 메시지를 남겨주세요"
+            required
+            className="content-textarea"
+          />
+          <div style={{fontSize: '0.7em', color: '#999'}}>수정과 삭제를위해 정확히 남겨주세요(분실시:신랑에게 문의)</div>
           <button type="submit" className="submit-button">메시지 남기기</button>
         </form>
       </section>
