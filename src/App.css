@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Knewave&family=PT+Sans+Narrow:wght@400;700&family=Petit+Formal+Script&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Sue+Ellen+Francisco&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap');
 body {
   background-color: #f9f9f9;
   overflow-x: hidden;
@@ -49,7 +50,7 @@ body {
 .header-image {
   position: relative;
   width: 100%;
-  height: 850px;
+  height: 820px;
   background-color: lightgray;
   margin-bottom: 20px;
   border-radius: 0;
@@ -140,33 +141,25 @@ body {
 }
 
 .modal {
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color: rgba(0, 0, 0, 0.7);
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; /* 화면 상단에 고정 */
+  left: 0; /* 화면 왼쪽에 고정 */
+  right: 0; /* 화면 오른쪽에 고정 */
+  bottom: 0; /* 화면 하단에 고정 */
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  z-index: 9999;
 }
 
 .modal-content {
-  position: relative;
-  width: 90%;
-  height: 80vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  user-select: none;
-}
-
-.modal-content img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  pointer-events: none;
+  padding: 20px;
+  border-radius: 10px;
+  color: white;
+  font-size: 24px;
+  max-height: 50vh;
+  overflow: auto;
 }
 
 .close-button {
@@ -376,19 +369,45 @@ body {
   color: #555;
 }
 
-.account-info {
-  font-family: 'Gowun Batang', serif; /* 폰트 설정 */
-  font-weight: 400; /* 폰트 두께 설정 */
-  font-style: normal; /* 폰트 스타일 설정 */
-  font-size: 1.0em;
-  color: #555;
+.account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 5px 0;  /* 상하 여백 줄임 */
+  padding: 0 10px;
+  gap: 8px;  /* 계좌번호와 버튼 사이 간격 설정 */
 }
 
+.account-info {
+  font-family: 'Gowun Batang', serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 1.0em;
+  color: #555;
+  margin: 0;  /* 기본 마진 제거 */
+  flex: 1;  /* 남은 공간 차지 */
+}
 
+.copy-button {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #666;  /* 고정 색상 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease;
+  min-width: 32px;
+}
 
+.copy-button:hover {
+  /* hover 효과 완전 제거 */
+}
 
-
-
+.copy-button:active {
+  transform: scale(1.2);  /* 클릭 시 크기만 변경 */
+}
 
 @media (max-width: 600px) {
   .App {
@@ -516,16 +535,14 @@ body {
 
 .overlay-text {
   position: absolute;
-  top: 10%; /* 사진의 상단에 위치 */
-  left: 50%; /* 수평 중앙 정렬 */
-  transform: translate(-50%, 0); /* 수평 중앙 정렬 */
-  color: white; /* 텍스트 색상 */
-  font-size: 1.8em; /* 텍스트 크기 조정 */
-  font-family: 'Gowun Batang', serif;
-  font-weight: 400;
-  font-style: normal;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* 그림자 효과 */
-  white-space: nowrap; /* 줄바꿈 방지 */
+  top: 10%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  color: white;
+  font-family: 'Dancing Script', cursive;
+  font-size: 2.5em;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
 }
 
 .wedding-bible {
@@ -740,7 +757,6 @@ button {
 }
 
 button:hover {
-  background-color: #e63946; /* Darker shade on hover */
 }
 
 .typing-effect {
@@ -815,24 +831,38 @@ button:hover {
 
 .svg-text {
   font-family: 'Sue Ellen Francisco', cursive;
-  stroke: white;
-  stroke-width: 1px;
-  stroke-dasharray: 100%;
-  stroke-dashoffset: 100%;
   fill: white;
-  animation: 
-    drawText 3s cubic-bezier(1, 0, 1, 1) forwards,
-    glowEffect 3s ease-in-out infinite;
+  opacity: 0;
+  animation: slideUp 0.8s ease forwards;
 }
 
-/* 두 번째 텍스트 (TO OUR) */
+/* 각 텍스트 라인별로 딜레이 적용 */
+.svg-text:nth-of-type(1) {
+  animation-delay: 0s;
+}
+
 .svg-text:nth-of-type(2) {
-  animation-delay: 0.5s, 0.5s;
+  animation-delay: 0.4s;
 }
 
-/* 세 번째 텍스트 (WEDDING) */
 .svg-text:nth-of-type(3) {
-  animation-delay: 1s, 1s;
+  animation-delay: 0.8s;
+}
+
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 텍스트에 살짝 빛나는 효과 추가 */
+.svg-text {
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
 }
 
 .flower-petal {

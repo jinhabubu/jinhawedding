@@ -272,6 +272,34 @@ const FlowerPetal = ({ style }) => (
   </svg>
 );
 
+// 복사 아이콘 컴포넌트 추가
+const CopyIcon = () => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="16" 
+    height="16" 
+    fill="currentColor" 
+    className="bi bi-copy" 
+    viewBox="0 0 16 16"
+  >
+    <path fillRule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
+  </svg>
+);
+
+// 계좌번호 복사 함수 수정
+const copyToClipboard = (text) => {
+  // 하이픈 제거
+  const cleanNumber = text.replace(/-/g, '');
+  
+  navigator.clipboard.writeText(cleanNumber)
+    .then(() => {
+      alert('계좌번호가 복사되었습니다.');
+    })
+    .catch(err => {
+      console.error('복사 실패:', err);
+    });
+};
+
 function App() {
   const [showInitialScreen, setShowInitialScreen] = useState(true);
   const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -321,6 +349,8 @@ function App() {
   const [lastPattern, setLastPattern] = useState(0); // 마지막 패턴 저장을 위한 변수 추가
 
   const [isClickable, setIsClickable] = useState(false);
+
+  const [dragStart, setDragStart] = useState(null);
 
   const openModal = (photo, index) => {
     setCurrentPhoto(photo);
@@ -566,6 +596,38 @@ function App() {
     }, 5000);
   }, []);
 
+  const handleDragStart = (e) => {
+    setDragStart(e.clientX || e.touches[0].clientX);
+  };
+
+  const handleDragEnd = (e) => {
+    if (!dragStart) return;
+    
+    const dragEnd = e.clientX || e.changedTouches[0].clientX;
+    const diff = dragStart - dragEnd;
+    const totalPhotos = Object.keys(galleryImages).length;
+    const photoKeys = Object.keys(galleryImages);
+
+    if (Math.abs(diff) > 50) {  // 50px 이상 드래그했을 때만 동작
+      if (diff > 0) {  // 왼쪽으로 드래그
+        if (currentPhotoIndex === totalPhotos - 1) {
+          setCurrentPhotoIndex(0);
+          setCurrentPhoto(galleryImages[photoKeys[0]]);  // 첫 번째 사진으로
+        } else {
+          handleNext();
+        }
+      } else {  // 오른쪽으로 드래그
+        if (currentPhotoIndex === 0) {
+          setCurrentPhotoIndex(totalPhotos - 1);
+          setCurrentPhoto(galleryImages[photoKeys[totalPhotos - 1]]);  // 마지막 사진으로
+        } else {
+          handlePrev();
+        }
+      }
+    }
+    setDragStart(null);
+  };
+
   return (
     <div className="App">
       {showInitialScreen && (
@@ -651,18 +713,18 @@ function App() {
         </div>
         <div className="header-image" style={{ position: 'relative' }}>
           <img src={require('./images/main_01.JPG')} alt="Main" />
-          <h1 className="overlay-text">진영♡하진</h1>
+          <h1 className="overlay-text">save the date</h1>
         </div>
         <br />
         <br />
-        <p className="wedding-bible fade-in-up">수고하고 무거운 짐 진 자들아 다 <br /> 내게로오라 내가 너희를 쉬게하리라 말씀 <br /> 마태복음 11:28 </p>
+        <p className="wedding-bible fade-in-up">새 계명을 너희에게 <br /> 주노니 서로 사랑하라 <br /> 내가 너희를 사랑한 것 같이 <br /> 너희도 서로 사랑하라 <br /><br /> 요한복음 13:34 </p>
         <br /><br /><br />
         <p className="wedding-invite-title fade-in-up"> 소중한 분들을 초대합니다. </p>
         <br />
-        <p className="wedding-invite-info fade-in-up"> 지금까지 신랑 신부가 잘 장성할 수 있도록 <br /> 함께해주시고 지켜봐주신 모든 지인분들께 <br />감사드립니다. <br /><br /> 이제 결실을 맺으며 하나님앞에 언약하는 <br />귀중한자리 초대하오니 찾아오셔서 축하와 <br />따듯한 말씀 나눠주시면 감사히 듣고 기억하여 <br /> 좋은 가정이 만들어가겠습니다. <br /><br />사정이 있어 참석하지 못하셔도<br />너무 마음쓰지 않으셨으면 좋겠습니다. <br /> 마음으로 축복하고 좋은 가정 <br />될 수 있도록 기도해주시면 충분합니다. </p>
+        <p className="wedding-invite-info fade-in-up"> 2021년 9월, 두 사람이 처음 만나 <br /> 2025년 5월, 결실을 맺습니다. <br /> 지금의 두 사람이 있기까지 함께해주시고 <br /> 성장을 지켜봐주신 모든 분들께 <br /> 감사의 인사를 드립니다. <br /><br /> 하나님 앞에서 부부로서 언약을 맺고 <br /> 예배하는 복된 자리에 <br /> 귀한 분들을 초대합니다.  </p>
         <br /><br /><br />
-        <p className="wedding-info1 fade-in-up">김경오·김종임 의 <p style={{width: '60px', display: 'inline-block', margin: '0px', fontSize: '0.8em'}}>아들</p>  진영</p>
-        <p className="wedding-info2 fade-in-up">정진수·김미란 의 <p style={{width: '60px', display: 'inline-block', margin: '0px', fontSize: '0.8em'}}>딸</p>  하진</p>
+        <p className="wedding-info1 fade-in-up">김경오·김종임 의 <p style={{width: '60px', display: 'inline-block', margin: '0px', fontSize: '0.8em'}}>차남</p>  진영</p>
+        <p className="wedding-info2 fade-in-up">정진수·김미란 의 <p style={{width: '60px', display: 'inline-block', margin: '0px', fontSize: '0.8em'}}>장녀</p>  하진</p>
         <br /><br /><br />
         <p className="wedding-location-title fade-in-up"> 예식안내 </p>
         <br />
@@ -671,7 +733,7 @@ function App() {
         <p className="wedding-dday fade-in-up">{weddingStatus}</p>
         <p className="wedding-date fade-in-up">2025 . 05 . 31 (토) 13:20 pm</p>
         <p className="wedding-location fade-in-up">광명무역센터컨벤션</p>
-        <p className="wedding-address fade-in-up">경기도 광명시 일직로 72 광명무역센터 C동 3층 그랜드볼룸</p>
+        <p className="wedding-address fade-in-up">경기도 광명시 일직로 72 광명무역센터 C동 3층 그랜드볼룸 <br /> (KTX광명역 안에 있는 웨딩홀과는 다른 곳입니다.)</p>
         <br />
         <p className="wedding-address fade-in-up" style={{textAlign:'left', paddingLeft:'10%'}}>연회장안내: 광명무역센터 C동 2층</p>
         <p className="wedding-address fade-in-up" style={{textAlign:'left', paddingLeft:'10%'}}>주차안내: 2시간 무료 (초과시 시간당 2000원) </p>
@@ -707,7 +769,15 @@ function App() {
         <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <PrevButton onClick={handlePrev} />
           {currentPhoto && (
-            <img src={currentPhoto} alt="Current" style={{ width: '100%', height: 'auto', margin: '0', maxHeight: '80%', objectFit: 'contain' }} />
+            <img 
+              src={currentPhoto} 
+              alt="Current" 
+              style={{ width: '100%', height: 'auto', margin: '0', maxHeight: '80%', objectFit: 'contain' }}
+              onMouseDown={handleDragStart}
+              onMouseUp={handleDragEnd}
+              onTouchStart={handleDragStart}
+              onTouchEnd={handleDragEnd}
+            />
           )}
           <NextButton onClick={handleNext} />
         </div>
@@ -781,7 +851,7 @@ function App() {
                       className="author-input"
                     />
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-                      <button type="submit" className="edit-button" style={{ backgroundColor: 'blue', color: 'white', padding: '10px 20px', fontSize: '1em' }}>수정</button>
+                      <button type="submit" className="edit-button" style={{ backgroundColor: '#58f', color: 'white', padding: '10px 20px', fontSize: '1em' }}>수정</button>
                       <button type="button" onClick={() => setIsEditMode(false)} className="cancel-button" style={{ marginLeft: '10px', backgroundColor: 'gray', color: 'white', padding: '10px 20px', fontSize: '1em' }}>취소</button>
                     </div>
                   </form>
@@ -805,7 +875,7 @@ function App() {
                       className="author-input"
                     />
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-                      <button type="submit" className="delete-button" style={{ backgroundColor: 'red', color: 'white', padding: '10px 20px', fontSize: '1em' }}>삭제</button>
+                      <button type="submit" className="delete-button" style={{ backgroundColor: '#f55', color: 'white', padding: '10px 20px', fontSize: '1em' }}>삭제</button>
                       <button type="button" onClick={() => setIsDeleteMode(false)} className="cancel-button" style={{ marginLeft: '10px', backgroundColor: 'gray', color: 'white', padding: '10px 20px', fontSize: '1em' }}>취소</button>
                     </div>
                   </form>
@@ -937,9 +1007,36 @@ function App() {
               borderRadius: '5px'
             }}
           >
-            <p className="account-info">신랑: 123-456-7890 (농협 홍길동)</p>
-            <p className="account-info">신랑 부: 123-456-7890 (국민 홍판서)</p>
-            <p className="account-info">신랑 모: 123-456-7890 (신한 홍여사)</p>
+            <div className="account-row">
+              <p className="account-info">신랑: 246602-04-232623 (국민 김진영)</p>
+              <button 
+                onClick={() => copyToClipboard('246602-04-232623')}
+                className="copy-button"
+                title="계좌번호 복사"
+              >
+                <CopyIcon />
+              </button>
+            </div>
+            <div className="account-row">
+              <p className="account-info">신랑 부: 123-456-7890 (국민 홍판서)</p>
+              <button 
+                onClick={() => copyToClipboard('123-456-7890')}
+                className="copy-button"
+                title="계좌번호 복사"
+              >
+                <CopyIcon />
+              </button>
+            </div>
+            <div className="account-row">
+              <p className="account-info">신랑 모: 123-456-7890 (신한 홍여사)</p>
+              <button 
+                onClick={() => copyToClipboard('123-456-7890')}
+                className="copy-button"
+                title="계좌번호 복사"
+              >
+                <CopyIcon />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -971,9 +1068,36 @@ function App() {
               borderRadius: '5px'
             }}
           >
-            <p className="account-info">신부: 098-765-4321 (우리 김길동)</p>
-            <p className="account-info">신부 부: 098-765-4321 (하나 김판서)</p>
-            <p className="account-info">신부 모: 098-765-4321 (기업 김여사)</p>
+            <div className="account-row">
+              <p className="account-info">신부: 098-765-4321 (우리 김길동)</p>
+              <button 
+                onClick={() => copyToClipboard('098-765-4321')}
+                className="copy-button"
+                title="계좌번호 복사"
+              >
+                <CopyIcon />
+              </button>
+            </div>
+            <div className="account-row">
+              <p className="account-info">신부 부: 098-765-4321 (하나 김판서)</p>
+              <button 
+                onClick={() => copyToClipboard('098-765-4321')}
+                className="copy-button"
+                title="계좌번호 복사"
+              >
+                <CopyIcon />
+              </button>
+            </div>
+            <div className="account-row">
+              <p className="account-info">신부 모: 098-765-4321 (기업 김여사)</p>
+              <button 
+                onClick={() => copyToClipboard('098-765-4321')}
+                className="copy-button"
+                title="계좌번호 복사"
+              >
+                <CopyIcon />
+              </button>
+            </div>
           </div>
         </div>
       </section>
