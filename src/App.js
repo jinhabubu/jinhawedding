@@ -550,7 +550,7 @@ function App() {
     // 10초 후에 스피너를 숨김
     const timer = setTimeout(() => {
       setShowSpinner(false);
-    }, 5000);
+    }, 3000);
 
     // 컴포넌트가 언마운트될 때 타이머 정리
     return () => clearTimeout(timer);
@@ -1149,9 +1149,9 @@ function App() {
               </button>
             </div>
             <div className="account-row">
-              <p className="account-info">신랑 부: 123-456-7890 (국민 홍판서)</p>
+              <p className="account-info">신랑 부: 246-24-0008-275 (국민 김경오)</p>
               <button 
-                onClick={() => copyToClipboard('123-456-7890')}
+                onClick={() => copyToClipboard('246-24-0008-275')}
                 className="copy-button"
                 title="계좌번호 복사"
               >
@@ -1159,9 +1159,9 @@ function App() {
               </button>
             </div>
             <div className="account-row">
-              <p className="account-info">신랑 모: 123-456-7890 (신한 홍여사)</p>
+              <p className="account-info">신랑 모: 246-21-0232-523 (국민 김종임)</p>
               <button 
-                onClick={() => copyToClipboard('123-456-7890')}
+                onClick={() => copyToClipboard('246-21-0232-523')}
                 className="copy-button"
                 title="계좌번호 복사"
               >
@@ -1200,9 +1200,9 @@ function App() {
             }}
           >
             <div className="account-row">
-              <p className="account-info">신부: 098-765-4321 (우리 김길동)</p>
+              <p className="account-info">신부: 110-480-544897 (신한 정하진)</p>
               <button 
-                onClick={() => copyToClipboard('098-765-4321')}
+                onClick={() => copyToClipboard('110-480-544897')}
                 className="copy-button"
                 title="계좌번호 복사"
               >
@@ -1210,9 +1210,9 @@ function App() {
               </button>
             </div>
             <div className="account-row">
-              <p className="account-info">신부 부: 098-765-4321 (하나 김판서)</p>
+              <p className="account-info">신부 부: 356-0965-5202-33 (농협 정진수)</p>
               <button 
-                onClick={() => copyToClipboard('098-765-4321')}
+                onClick={() => copyToClipboard('356-0965-5202-33')}
                 className="copy-button"
                 title="계좌번호 복사"
               >
@@ -1220,9 +1220,9 @@ function App() {
               </button>
             </div>
             <div className="account-row">
-              <p className="account-info">신부 모: 098-765-4321 (기업 김여사)</p>
+              <p className="account-info">신부 모: 199-023-94418 (농협 김미란)</p>
               <button 
-                onClick={() => copyToClipboard('098-765-4321')}
+                onClick={() => copyToClipboard('199-023-94418')}
                 className="copy-button"
                 title="계좌번호 복사"
               >
@@ -1232,6 +1232,21 @@ function App() {
           </div>
         </div>
       </section>
+
+      <footer style={{
+        width: '100%',
+        padding: '20px 0',
+        backgroundColor: 'white',
+        textAlign: 'center',
+        color: '#999',
+        fontSize: '0.8em',
+        marginTop: '50px'
+      }}>
+        <p>© 2025 Jinyoung ♥ Hajin Wedding. All rights reserved.
+          <br /> 신랑이 직접만든 모바일 청첩장입니다.
+        </p>
+        <p style={{ marginTop: '5px' }}>God bless You ♥</p>
+      </footer>
 
     </div>
   );
