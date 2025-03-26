@@ -35,7 +35,7 @@ function importAll(r) {
 const images = importAll(require.context('./images', false, /\.(png|jpe?g|svg)$/));
 
 // 갤러리 이미지 가져오기
-const galleryImages = importAll(require.context('./images/gallery', false, /\.(png|jpe?g|svg)$/));
+const galleryImages = importAll(require.context('./images/gallery', false, /\.(png|jpe?g|svg|webp)$/));
 
 // 모달 스타일 설정
 const customStyles = {
@@ -787,7 +787,7 @@ function App() {
           )}
         </div>
         <div className="header-image" style={{ position: 'relative' }}>
-          <img src={require('./images/main_01.JPG')} alt="Main" />
+          <img src={require('./images/main_01.webp')} alt="Main" />
           <h1 className="overlay-text">save the date</h1>
         </div>
         <br />
