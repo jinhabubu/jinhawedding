@@ -5,7 +5,7 @@ import { db, database } from './firebase';
 import { collection, addDoc, query, onSnapshot, orderBy } from 'firebase/firestore';
 import { ref, set, onValue, push, get } from 'firebase/database';
 import './App.css';
-
+//여기
 Modal.setAppElement('#root');
 
 const photos = Array.from({ length: 10 }, (_, index) => ({
@@ -35,7 +35,7 @@ function importAll(r) {
 const images = importAll(require.context('./images', false, /\.(png|jpe?g|svg)$/));
 
 // 갤러리 이미지 가져오기
-const galleryImages = importAll(require.context('./images/gallery', false, /\.(png|jpe?g|svg|webp)$/));
+const galleryImages = importAll(require.context('./images/gallery', false, /\.(png|jpe?g|svg|webp|avif)$/));
 
 // 모달 스타일 설정
 const customStyles = {
@@ -232,7 +232,7 @@ const Map = () => {
     imageContainer.style.overflow = 'hidden'; // 이미지가 동그라미를 넘지 않도록
 
     const markerImage = document.createElement('img');
-    markerImage.src = require('./images/marker.png'); // 마커 이미지 경로
+    markerImage.src = require('./images/marker.webp'); // 마커 이미지 경로
     markerImage.style.width = '100%'; // 이미지 크기
     markerImage.style.height = '100%'; // 이미지 크기
     markerImage.style.objectFit = 'cover'; // 이미지 비율 유지
@@ -300,7 +300,35 @@ const copyToClipboard = (text) => {
     });
 };
 
+// 이미지 리사이징 함수 추가
+const resizeImage = (src, maxWidth = 300) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = src;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      // 비율 계산
+      const ratio = maxWidth / img.width;
+      const width = maxWidth;
+      const height = img.height * ratio;
+
+      canvas.width = width;
+      canvas.height = height;
+
+      // 이미지 그리기
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // WebP 포맷으로 변환 (지원하는 브라우저에서)
+      const resizedImage = canvas.toDataURL('image/avif', 0.8);
+      resolve(resizedImage);
+    };
+  });
+};
+
 function App() {
+  const [cachedGalleryImages, setCachedGalleryImages] = useState({});
   const [showInitialScreen, setShowInitialScreen] = useState(true);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [currentPhoto, setCurrentPhoto] = useState(null);
@@ -364,6 +392,8 @@ function App() {
   const [initialTouchDistance, setInitialTouchDistance] = useState(null);
   const imageRef = useRef(null);
   const [isZoomed, setIsZoomed] = useState(false);
+
+  const [thumbnails, setThumbnails] = useState({});
 
   const openModal = (photo, index) => {
     // 모달 상태 업데이트
@@ -703,6 +733,65 @@ function App() {
   // 표시할 메시지 수 계산
   const displayedMessages = showAllMessages ? filteredMessages : filteredMessages.slice(0, 5);
 
+  // 이미지 프리로딩 및 캐싱 함수
+  useEffect(() => {
+    const preloadAndCacheImages = async () => {
+      // 로컬 스토리지에서 캐시된 이미지 확인
+      const cachedImages = localStorage.getItem('galleryImages');
+      if (cachedImages) {
+        setCachedGalleryImages(JSON.parse(cachedImages));
+        return;
+      }
+
+      // 이미지 로드 및 캐싱
+      const loadedImages = {};
+      for (const [key, src] of Object.entries(galleryImages)) {
+        loadedImages[key] = src;
+      }
+      
+      setCachedGalleryImages(loadedImages);
+      localStorage.setItem('galleryImages', JSON.stringify(loadedImages));
+    };
+
+    preloadAndCacheImages();
+  }, []);
+
+  // 이미지 지연 로딩을 위한 Intersection Observer 사용
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            const src = img.dataset.src;
+            if (src) {
+              img.style.backgroundImage = `url(${src})`;
+              img.removeAttribute('data-src');
+              observer.unobserve(img);
+            }
+          }
+        });
+      },
+      { rootMargin: '50px' }
+    );
+
+    document.querySelectorAll('.photo').forEach(img => observer.observe(img));
+    return () => observer.disconnect();
+  }, [cachedGalleryImages]);
+
+  // 썸네일 생성
+  useEffect(() => {
+    const generateThumbnails = async () => {
+      const thumbs = {};
+      for (const [key, src] of Object.entries(galleryImages)) {
+        thumbs[key] = await resizeImage(src);
+      }
+      setThumbnails(thumbs);
+    };
+
+    generateThumbnails();
+  }, []);
+
   return (
     <div className="App">
       {showInitialScreen && (
@@ -787,7 +876,7 @@ function App() {
           )}
         </div>
         <div className="header-image" style={{ position: 'relative' }}>
-          <img src={require('./images/main_01.webp')} alt="Main" />
+          <img src={require('./images/main_01.avif')} alt="Main" />
           <h1 className="overlay-text">save the date</h1>
         </div>
         <br />
@@ -828,8 +917,13 @@ function App() {
             <div
               key={key}
               className="photo"
-              style={{ backgroundImage: `url(${galleryImages[key]})` }}
+              style={{ 
+                backgroundImage: `url(${thumbnails[key] || galleryImages[key]})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
               onClick={() => openModal(galleryImages[key], index)}
+              loading="lazy"
             />
           ))}
         </div>
